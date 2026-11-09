@@ -17,7 +17,7 @@ voice:
   style: docs/voice.md
   generated: 2026-11-08  # gemini-voice-mcp, script v0.4, 6 段合成，原始总长 342.5 s
   generated_en: 2026-11-09  # script.en.md v0.3, en-US；sec3/sec4 各分两次合成后拼接（单次上限 2000 字符），原始总长 446.9 s
-status: final-zh, review-en  # en: out/ep001-en-v1.mp4 待用户审； 2026-11-09 用户审定成片 v2（out/ep001-zh-v2.mp4，350.8 s）；待发布
+status: published  # 2026-11-09 中文 B 站、英文 YouTube
 release:
-  zh: null
-  en: null
+  zh: https://www.bilibili.com/video/BV1k3W86SEYT  # 2026-11-09 投稿
+  en: https://youtu.be/ANYJK46OmbQ  # 2026-11-09 公开

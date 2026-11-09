@@ -42,7 +42,7 @@ docs/        课程大纲、前置知识关系、写作规范
 
 | 期 | 标题 | 地图位置 | 视频 |
 |---|---|---|---|
-| — | 筹备中 | | |
+| 1 | [什么是虚拟细胞](episodes/ep001-what-is-a-virtual-cell/) / What Is a Virtual Cell? | 序章 | [B 站（中文）](https://www.bilibili.com/video/BV1k3W86SEYT) · [YouTube（English）](https://youtu.be/ANYJK46OmbQ) |
 
 ## 纠错与建议
 
