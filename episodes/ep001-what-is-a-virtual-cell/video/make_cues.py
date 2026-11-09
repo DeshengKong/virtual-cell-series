@@ -23,17 +23,22 @@ from faster_whisper import WhisperModel
 EP = pathlib.Path(__file__).resolve().parent.parent
 LANG = sys.argv[1] if len(sys.argv) > 1 else "zh"
 GAP = 0.8
-PAUSES = {"你先猜一下：我们没有碰 A，A 会怎么样？": 2.0}
+PAUSES = {"你先猜一下：我们没有碰 A，A 会怎么样？": 2.0,
+          "What happens to A?": 2.0}
+SCRIPT = {"zh": ("script.md", "## 内部备注"), "en": ("script.en.md", "## Internal notes")}
+# 中文按句末标点切；英文按 . ? ! ; 后跟空格切（不切 "e.g." 之类，本期没有）
+SPLIT = {"zh": r"(?<=[。？！；])|\n", "en": r"(?<=[.?!;])\s+|\n"}
 SR = 24000
 
 
 def sections_text():
-    text = (EP / "script.md").read_text(encoding="utf-8").split("## 内部备注")[0]
+    fn, cut = SCRIPT[LANG]
+    text = (EP / fn).read_text(encoding="utf-8").split(cut)[0]
     out = []
     for sec in re.split(r"\n## ", text)[1:]:
         body = "\n".join(l for l in sec.split("\n")[1:] if not l.startswith((">", "---")))
         body = re.sub(r"〔.*?〕", "", body).replace("**", "")
-        out.append([s.strip() for s in re.split(r"(?<=[。？！；])|\n", body) if s and s.strip()])
+        out.append([s.strip() for s in re.split(SPLIT[LANG], body) if s and s.strip()])
     return out
 
 
@@ -90,7 +95,7 @@ def main():
         # 按停顿切开音频并插入静音
         sec_start, shift, cursor = t0, 0.0, 0
         for s, (a, b) in zip(sents, times):
-            subs.append([round(sec_start + a + shift, 3), round(sec_start + b + shift, 3), s.rstrip("。；")])
+            subs.append([round(sec_start + a + shift, 3), round(sec_start + b + shift, 3), s.rstrip("。；" if LANG == "zh" else ";")])
             if s in PAUSES:
                 cut = int(round(b * SR)) * 2
                 pcm_out += pcm[cursor:cut] + silence(PAUSES[s])

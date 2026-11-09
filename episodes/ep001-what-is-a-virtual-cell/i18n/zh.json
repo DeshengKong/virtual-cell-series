@@ -90,5 +90,6 @@
   "cover_t2a": "没碰 A，",
   "cover_t2b": "A 却翻倍了",
   "cover_sub": "从零讲透：细胞状态 + 扰动 → 新状态",
-  "cover_before": "原来 1.0"
+  "cover_before": "原来 1.0",
+  "half_note": "（被压着时 = 1）"
 }

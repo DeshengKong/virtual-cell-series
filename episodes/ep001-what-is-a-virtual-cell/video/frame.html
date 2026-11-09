@@ -24,6 +24,9 @@ const C = {
 };
 let STR = {}, SUBS = [], SEC = [];   // 由 render.py 注入：文字、字幕、各节起止
 const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
+const CJK=s=>/[\u4e00-\u9fff]/.test(s);
+// 西文长句按单词折成多行（中文不走这里，保持原样）
+function wrapLatin(s,n){const L=[];let l='';for(const w of s.split(' ')){if(l&&(l+' '+w).length>n){L.push(l);l=w;}else l=l?l+' '+w:w;}if(l)L.push(l);return L;}
 const ease=x=>1-Math.pow(1-clamp(x),3);
 const io=x=>{x=clamp(x);return x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2};
 const ramp=(t,a,b)=>clamp((t-a)/(b-a));
@@ -48,6 +51,16 @@ function chrome(t,title,titleOp=1){
 function subtitle(t){
   const cur=SUBS.find(x=>t>=x[0]&&t<x[1]); if(!cur) return '';
   const txt=cur[2];
+  if(!/[\u4e00-\u9fff]/.test(txt)){ // 西文：按单词折行，每行 ≤ 64 字符；超过两行则按字数比例分页显示
+    const lines=[]; let ln='';
+    for(const w of txt.split(' ')){ if(ln&&(ln+' '+w).length>64){lines.push(ln);ln=w;} else ln=ln?ln+' '+w:w; }
+    if(ln) lines.push(ln);
+    const pages=[]; for(let i=0;i<lines.length;i+=2) pages.push(lines.slice(i,i+2));
+    const tot=txt.length, el=(t-cur[0])/(cur[1]-cur[0])*tot; let acc=0,pg=pages[pages.length-1];
+    for(const P of pages){acc+=P.join(' ').length+1; if(el<acc){pg=P;break;}}
+    if(pg.length===1) return T(960,1000,pg[0],{size:40,anchor:'middle'});
+    return T(960,972,pg[0],{size:40,anchor:'middle'})+T(960,1030,pg[1],{size:40,anchor:'middle'});
+  }
   if(txt.length<=30) return T(960,1000,txt,{size:42,anchor:'middle'});
   const mid=txt.length/2; let cut=-1,best=1e9;
   for(let i=0;i<txt.length;i++) if('，、：；'.includes(txt[i])&&Math.abs(i-mid)<best){best=Math.abs(i-mid);cut=i+1;}
@@ -171,9 +184,9 @@ function sec1(t,lt,d){ // 开场
   if(showHonest){
     const a=ease(ramp(f,0.65,0.7)), b=ease(ramp(f,0.76,0.81)), c=ease(ramp(f,0.91,0.95));
     s+=R(260,330,640,300,{op:a}); s+=T(300,400,STR.now_can,{size:30,fill:C.steel,w:700,op:a});
-    s+=T(300,470,STR.now_can_txt,{size:34,op:a});
+    if(CJK(STR.now_can_txt)) s+=T(300,470,STR.now_can_txt,{size:34,op:a}); else wrapLatin(STR.now_can_txt,30).forEach((l,k)=>s+=T(300,470+k*48,l,{size:34,op:a}));
     s+=R(1020,330,640,300,{op:b}); s+=T(1060,400,STR.now_cannot,{size:30,fill:C.press,w:700,op:b});
-    s+=T(1060,470,STR.now_cannot_txt,{size:34,op:b});
+    if(CJK(STR.now_cannot_txt)) s+=T(1060,470,STR.now_cannot_txt,{size:34,op:b}); else wrapLatin(STR.now_cannot_txt,30).forEach((l,k)=>s+=T(1060,470+k*48,l,{size:34,op:b}));
     s+=T(960,740,STR.body_note,{size:32,fill:C.t3,anchor:'middle',op:c});
   }
   return s;
@@ -183,7 +196,7 @@ function sec2(t,lt,d){ // 机器
   s+=machine(960,520,{p:ramp(f,0.05,0.3)});
   const e=ease(ramp(f,0.35,0.55));
   STR.pert_ex.forEach((w,i)=>{const o=ease(ramp(f,0.40+i*0.1,0.46+i*0.1));
-    s+=R(250+i*230-100,700,200,64,{op:o,stroke:C.hand,r:32}); s+=T(250+i*230,742,w,{size:28,anchor:'middle',op:o});});
+    s+=R(250+i*230-100,700,200,64,{op:o,stroke:C.hand,r:32}); s+=T(250+i*230,742,w,{size:CJK(w)?28:24,anchor:'middle',op:o});});
   const bo=ease(ramp(f,0.75,0.8));
   s+=`<path d="M150,790 L150,810 L830,810 L830,790" fill="none" stroke="${C.hand}" stroke-width="3" opacity="${bo}"/>`;
   s+=T(490,860,STR.pert_word,{size:40,w:900,fill:C.hand,anchor:'middle',op:bo});
@@ -230,7 +243,7 @@ function sec3(t,lt,d){ // 玩具细胞
       s+=T(1500,560,STR.toy_simplify,{size:24,fill:C.t3,op:o,anchor:'middle'});}
     if(f>0.598&&f<0.679){const o=ease(ramp(f,0.598,0.61));
       s+=T(BX,BY+60,STR.full,{size:28,fill:C.gold,anchor:'middle',op:o});
-      s+=T(BX,BY+100,'（'+STR.half.split('：')[0]+'时 = 1）',{size:24,fill:C.t3,anchor:'middle',op:o});}
+      s+=T(BX,BY+100,STR.half_note,{size:24,fill:C.t3,anchor:'middle',op:o});}
     if(f>0.679){ // 只看状态猜不到
       const o=ease(ramp(f,0.679,0.69));
       s+=`<rect x="0" y="200" width="1920" height="440" fill="${C.bg}" opacity="${o*0.94}"/>`;
@@ -265,10 +278,11 @@ function sec4(t,lt,d){ // 天气 vs 细胞
   cols.forEach(([head,rows,st],i)=>{
     const o=ease(ramp(f,st,st+0.05)), y=280+i*205;
     s+=R(96,y,1728,180,{op:o});
-    s+=T(140,y+100,['①','②','③'][i]+' '+[STR.w1t,head,head][i],{size:34,w:900,op:o});
-    if(i==0){s+=T(560,y+100,rows[0],{size:30,fill:C.t2,op:o});s+=T(1100,y+100,rows[1],{size:30,fill:C.hand,op:o});}
-    else if(i==1){s+=T(560,y+75,rows[0],{size:30,op:o});s+=T(560,y+130,rows[1],{size:30,fill:C.t2,op:o});}
-    else {s+=T(560,y+100,rows[0],{size:30,fill:C.t2,op:o});s+=T(1100,y+100,rows[1],{size:30,fill:C.gold,op:o});}
+    const zh=CJK(STR.w1t), fs=zh?30:26;
+    s+=T(140,y+100,['①','②','③'][i]+' '+[STR.w1t,head,head][i],{size:zh?34:30,w:900,op:o});
+    if(i==0){s+=T(560,y+100,rows[0],{size:fs,fill:C.t2,op:o});s+=T(1100,y+100,rows[1],{size:fs,fill:C.hand,op:o});}
+    else if(i==1){s+=T(560,y+75,rows[0],{size:fs,op:o});s+=T(560,y+130,rows[1],{size:fs,fill:C.t2,op:o});}
+    else {s+=T(560,y+100,rows[0],{size:fs,fill:C.t2,op:o});s+=T(1100,y+100,rows[1],{size:fs,fill:C.gold,op:o});}
   });
   return s;
 }
@@ -293,7 +307,8 @@ function sec6(t,lt,d){ // 总结
       s+=R(pos[0]-170,pos[1]-45,340,90,{op:o,r:45}); s+=T(pos[0],pos[1]+12,m,{size:32,anchor:'middle',op:o});});
   } else if(f<0.544){
     const o=ease(ramp(f,0.18,0.21));
-    s+=T(960,560,STR.takeaway,{size:46,w:900,anchor:'middle',op:o});
+    if(CJK(STR.takeaway)) s+=T(960,560,STR.takeaway,{size:46,w:900,anchor:'middle',op:o});
+    else wrapLatin(STR.takeaway,44).forEach((l,k,a)=>s+=T(960,560+(k-(a.length-1)/2)*66,l,{size:50,w:900,anchor:'middle',op:o}));
   } else {
     const o=ease(ramp(f,0.544,0.57));
     s+=net(560,430,400,{off:{C:1},op:o});
@@ -310,7 +325,13 @@ function renderFrame(t){
   let i=0; for(let k=0;k<SEC.length;k++) if(t>=SEC[k][0]) i=k;
   const [a,b]=SEC[i];
   let s=`<rect width="1920" height="1080" fill="${C.bg}"/>`;
-  s+=DRAW[i](t,Math.min(t-a,b-a-1e-3),b-a);
+  let lt=Math.min(t-a,b-a-1e-3);
+  if(typeof WARP!=='undefined'&&WARP){ // 非中文：按逐行锚点把本语言的节内时间映射到中文节拍
+    const f=lt/(b-a), W=WARP[i]; let j=0; while(j<W.length-2&&f>W[j+1][0]) j++;
+    const [e0,z0]=W[j],[e1,z1]=W[j+1];
+    lt=(z0+(z1-z0)*clamp((f-e0)/Math.max(e1-e0,1e-6)))*(b-a);
+  }
+  s+=DRAW[i](t,lt,b-a);
   s+=subtitle(t);
   document.getElementById('svg').innerHTML=s;
 }

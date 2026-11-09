@@ -50,6 +50,41 @@ def subtitles(bounds):
     return subs
 
 
+SCRIPT = {"zh": ("script.md", "## 内部备注"), "en": ("script.en.md", "## Internal notes")}
+SPLIT = {"zh": r"(?<=[。？！；])|\n", "en": r"(?<=[.?!;])\s+|\n"}
+PAUSE_LINES = {"zh": "你先猜一下", "en": "Take a guess first"}
+PAUSE_S = 2.0
+
+
+def line_anchors(lang):
+    """每节每一行（脚本里的一行旁白）的开始时刻，换算成节内占比。
+    zh/en 两版脚本逐行对应，所以同一行在两种语言里的占比可以互相映射。"""
+    fn, cut = SCRIPT[lang]
+    text = (EP / fn).read_text(encoding="utf-8").split(cut)[0]
+    c = json.loads((EP / f"cues.{lang}.json").read_text(encoding="utf-8"))
+    subs, out, k = c["subs"], [], 0
+    for (a, b), sec in zip(c["sections"], re.split(r"\n## ", text)[1:]):
+        body = [re.sub(r"〔.*?〕", "", l).replace("**", "").strip()
+                for l in sec.split("\n")[1:] if not l.startswith((">", "---"))]
+        anchors = []
+        for line in filter(None, body):
+            n = len([x for x in re.split(SPLIT[lang], line) if x and x.strip()])
+            anchors.append((subs[k][0] - a) / (b - a))
+            if PAUSE_LINES[lang] in line:  # 停顿开始处也作为锚点
+                nxt = subs[k + n][0] if k + n < len(subs) else b
+                anchors.append((nxt - PAUSE_S - a) / (b - a))
+            k += n
+        out.append([0.0] + anchors + [1.0])
+    return out
+
+
+def warp_table(lang):
+    """lang 的节内占比 → 中文版节内占比（frame.html 的节拍阈值是按中文旁白调的）。"""
+    if lang not in SCRIPT or lang == "zh" or not (EP / "cues.zh.json").exists():
+        return None
+    return [list(zip(e, z)) for e, z in zip(line_anchors(lang), line_anchors("zh"))]
+
+
 def open_page(p, lang):
     b = p.chromium.launch(channel="chrome")
     pg = b.new_page(viewport={"width": 1920, "height": 1080}, device_scale_factor=1)
@@ -63,7 +98,7 @@ def open_page(p, lang):
     else:
         bounds = section_bounds()
         subs = subtitles(bounds)
-    pg.evaluate("([s,u,b])=>{STR=s;SUBS=u;SEC=b;}", [strs, subs, bounds])
+    pg.evaluate("([s,u,b,w])=>{STR=s;SUBS=u;SEC=b;WARP=w;}", [strs, subs, bounds, warp_table(lang)])
     return b, pg, bounds
 
 

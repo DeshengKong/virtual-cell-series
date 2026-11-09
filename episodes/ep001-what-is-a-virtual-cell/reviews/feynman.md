@@ -75,3 +75,26 @@
 | 时长 | 压缩开场与第四节；正文约 1576 字，估约 4 分 50 秒 + 停顿；以实际配音时长为准 |
 
 新增核心领悟句（审阅者指出的本集最有科学价值之处）："只知道细胞现在的样子还不够，还得知道里面的规则。"
+
+---
+
+## 英文版审核（2026-11-09）
+
+脚本 `script.en.md` 由定稿中文改写（逐行与中文对应，便于画面节拍映射）。
+
+### 第 1 轮：英语母语新生复述 + 费曼/忠实度审核（v0.1）
+- 新生复述：主线能复述；问题：①"half power"先断言后解释 ②基因/蛋白命名混用 ③天气第二条术语过载、没点明和天气的对比 ④"a virtual cell is just one sentence"不通。
+- 费曼/忠实度：无原则性错误，第 5 条（说错不行）条件通过。必须改：
+  - "for any cell and any drug"英文可读成"连一种细胞都不行"
+  - "a virtual cell is just one sentence"（范畴错误）
+  - "gene follows its own blueprint / controls another gene"（比"调控"强）
+  - "what they read"指代漂移到新方法
+  - 推动的动词前后不统一
+- 处理：全部采纳（见 v0.2）；另按新生意见在讲"一半马力"时点明"按玩具的规则，C 在正常水平时让 A 的产量减半"，天气第二条补"we can watch the sky all day"，外界信号举例"hormone"。
+
+### 第 2 轮：新生复述重测（v0.2）
+- "为什么正好是 2"已能自己说出；无严重问题。采纳小改：补"Breakdown keeps pace with how much A there is"（稳态 = 产量/降解速率，符合模型）、B 明确降到 0、RNA 一句补后果、删"its cell state"冗余。→ v0.3。
+
+### 画面（英文字串）
+- 联系表 `reviews/contact_en_layout.png`：修正 sec1 细胞内标签、sec2 扰动胶囊、sec3 硬编码"时"（改为 `half_note` 字串）、sec4 表格列重叠、sec6 结论溢出、sec1 两张卡片。所有改动仅对西文生效，中文画面逐像素不变（已抽帧核对）。
+- 节拍：`render.py` 按逐行锚点把英文节内时间映射到中文节拍（`WARP`），不重调阈值。
