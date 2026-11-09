@@ -1,0 +1,31 @@
+<!doctype html><html><head><meta charset="utf-8">
+<style>body{margin:0;background:#0E161D}#s{display:block}</style></head><body><svg id="s"></svg>
+<script>
+const C={bg:'#0E161D',steel:'#8FB3C8',push:'#4fa3ef',press:'#e4572e',gold:'#F0B429',t1:'#E8EEF2',t3:'#7d8b96',card:'#16212a',edge:'#2c3a45'};
+const F="'Noto Sans SC','PingFang SC','Source Han Sans SC',sans-serif";
+function arrowHead(x,y,ang,col,sz=16){const a=ang,b=0.45;return `<path d="M${x},${y} L${x-sz*Math.cos(a-b)},${y-sz*Math.sin(a-b)} M${x},${y} L${x-sz*Math.cos(a+b)},${y-sz*Math.sin(a+b)}" stroke="${col}" stroke-width="${sz/3}" stroke-linecap="round" fill="none"/>`;}
+// 三节点环：A→B→C，C⊣A
+function loop(cx,cy,R,r,font,sw){
+  const P=[-90,30,150].map(d=>[cx+R*Math.cos(d*Math.PI/180),cy+R*Math.sin(d*Math.PI/180)]);
+  let s='';
+  const edge=(i,j,col,press)=>{const [x1,y1]=P[i],[x2,y2]=P[j];const a=Math.atan2(y2-y1,x2-x1);
+    const sx=x1+(r+10)*Math.cos(a),sy=y1+(r+10)*Math.sin(a),ex=x2-(r+12)*Math.cos(a),ey=y2-(r+12)*Math.sin(a);
+    s+=`<line x1="${sx}" y1="${sy}" x2="${ex}" y2="${ey}" stroke="${col}" stroke-width="${sw}" stroke-linecap="round"/>`;
+    if(press){const px=-Math.sin(a),py=Math.cos(a),L=r*0.55;s+=`<line x1="${ex+px*L}" y1="${ey+py*L}" x2="${ex-px*L}" y2="${ey-py*L}" stroke="${col}" stroke-width="${sw*1.2}" stroke-linecap="round"/>`;}
+    else s+=arrowHead(ex,ey,a,col,sw*3.2);};
+  edge(0,1,C.push,false); edge(1,2,C.push,false); edge(2,0,C.press,true);
+  ['A','B','C'].forEach((k,i)=>{const [x,y]=P[i];
+    s+=`<circle cx="${x}" cy="${y}" r="${r}" fill="${i==0?C.gold:'#1b2833'}" stroke="${i==0?C.gold:C.steel}" stroke-width="${sw}"/>`;
+    s+=`<text x="${x}" y="${y+font*0.36}" font-family="${F}" font-size="${font}" font-weight="900" fill="${i==0?C.bg:C.t1}" text-anchor="middle">${k}</text>`;});
+  return s;
+}
+function avatar(){const W=800;let s=`<rect width="${W}" height="${W}" fill="${C.bg}"/>`;s+=loop(400,430,230,92,104,14);return [W,W,s];}
+function banner(W,H){let s=`<rect width="${W}" height="${H}" fill="${C.bg}"/>`;
+  // 右侧：玩具细胞 + 柱子（关掉 B 后：A=2, B=0, C=0，来自 toycell）
+  s+=`<g transform="translate(${W-520},${H/2-10}) scale(${H/700})">`+loop(0,20,200,74,84,12)+`</g>`;
+  // 左侧文字
+  s+=`<text x="${H*0.42}" y="${H*0.47}" font-family="${F}" font-size="${H*0.26}" font-weight="900" fill="${C.t1}">虚拟细胞：从零到前沿</text>`;
+  s+=`<text x="${H*0.44}" y="${H*0.70}" font-family="${F}" font-size="${H*0.105}" fill="${C.steel}">细胞状态 + 扰动 → 新状态 · 每周一期 · 把本质讲透</text>`;
+  return [W,H,s];}
+window.draw=(kind,W,H)=>{const [w,h,s]=kind==='avatar'?avatar():banner(W,H);const e=document.getElementById('s');e.setAttribute('width',w);e.setAttribute('height',h);e.setAttribute('viewBox',`0 0 ${w} ${h}`);e.innerHTML=s;};
+</script></body></html>
