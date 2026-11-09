@@ -10,8 +10,8 @@
 | 4 | 单细胞测序读到的主要是 RNA，不是蛋白质本身 | scRNA-seq 的测量对象为 RNA（#2 及 Hwang B, et al. *Exp Mol Med* 2018;50(8):1–14. [doi:10.1038/s12276-018-0071-8](https://doi.org/10.1038/s12276-018-0071-8)） | ✅ |
 | 5 | 人类有将近两万个能做出蛋白质的基因 | Amaral P, et al. The status of the human gene catalogue. *Nature* 2023;622(7981):41–47. [doi:10.1038/s41586-023-06490-x](https://doi.org/10.1038/s41586-023-06490-x)（"fewer than 20,000"）。审阅者另指 GENCODE v50 为 19,442，与"将近两万"一致，版本号待自查 | ✅ |
 | 6 | "AI 虚拟细胞"是领域明确提出的目标方向（片中未点名） | Bunne C, et al. *Cell* 2024;187(25):7045–7063. [doi:10.1016/j.cell.2024.11.015](https://doi.org/10.1016/j.cell.2024.11.015) | ✅ |
-| 7 | 医生会参考临床试验，有时还看基因检测选药 | 循证医学与药物基因组学通行做法；拟引用 FDA《药物标签中的药物基因组学生物标志物表》 | ⏳ 需补引用 |
-| 8 | 天气预报有成熟的物理方程做基础，但细节（云、对流等）仍要近似处理 | 数值天气预报的参数化（审阅者引 ECMWF 文档） | ⏳ 需补引用 |
+| 7 | 医生会参考临床试验，有时还看基因检测选药 | U.S. FDA. [Table of Pharmacogenomic Biomarkers in Drug Labeling](https://www.fda.gov/drugs/science-and-research-drugs/table-pharmacogenomic-biomarkers-drug-labeling)（列出说明书中含药物基因组学信息的已批准药物，部分附有据生物标志物采取的具体用药措施） | ✅ 官方页面核对 |
+| 8 | 天气预报有成熟的物理方程做基础，但细节（云、对流等）仍要近似处理 | ECMWF. [Atmospheric physics](https://www.ecmwf.int/en/research/modelling-and-prediction/atmospheric-physics)（辐射、云、对流、湍流等次网格过程以参数化表示）；[OpenIFS: Physical Processes](https://confluence.ecmwf.int/display/OIFS/3.2+OpenIFS:+Physical+Processes) | ✅ 官方页面核对 |
 | 9 | 玩具细胞的全部数字（1/1/1；敲除 B → 2/0/0；敲除 C → 2/1.6/0；"一半马力"） | 本仓库 `toycell`，方程见 script.md 内部备注；费曼审核与用户审阅两次独立复算一致 | ✅ |
 
 ## 已删去的说法
