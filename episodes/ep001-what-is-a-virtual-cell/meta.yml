@@ -16,7 +16,7 @@ voice:
   name: Charon
   style: docs/voice.md
   generated: 2026-11-08  # gemini-voice-mcp, script v0.4, 6 段合成，原始总长 342.5 s
-status: vo-draft
+status: final-zh  # 2026-11-09 用户审定成片 v2（out/ep001-zh-v2.mp4，350.8 s）；待发布
 release:
   zh: null
   en: null

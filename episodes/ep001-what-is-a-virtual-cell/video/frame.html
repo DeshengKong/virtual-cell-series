@@ -292,7 +292,7 @@ function sec6(t,lt,d){ // 总结
     STR.map.forEach((m,i)=>{const o=ease(ramp(f,0.01+i*0.03,0.05+i*0.03)),pos=[[560,380],[560,740],[1360,380],[1360,740]][i];
       s+=R(pos[0]-170,pos[1]-45,340,90,{op:o,r:45}); s+=T(pos[0],pos[1]+12,m,{size:32,anchor:'middle',op:o});});
   } else if(f<0.544){
-    const o=ease(ramp(f,0.285,0.31));
+    const o=ease(ramp(f,0.18,0.21));
     s+=T(960,560,STR.takeaway,{size:46,w:900,anchor:'middle',op:o});
   } else {
     const o=ease(ramp(f,0.544,0.57));
