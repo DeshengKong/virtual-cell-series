@@ -50,5 +50,5 @@ Narration: AI voice (Google Gemini TTS). Script written and fact-checked by a ph
 
 | 平台 | 链接 | 状态 |
 |---|---|---|
-| YouTube | https://youtu.be/ANYJK46OmbQ | 2026-11-09 已上传，私享；缩略图和描述里的可点击链接需先完成手机验证 |
+| YouTube | https://youtu.be/ANYJK46OmbQ | 2026-11-09 已上传，封面已上；公开由用户在 Studio 点“完成→保存”；描述可点击链接还需 YouTube 一次性验证 |
 | B 站（bili_28852615） | 待生成 | 2026-11-09 信息已全部填好（含封面 4:3/16:9、创作声明“含AI生成内容”、分区知识、标签 5 个），等用户点“立即投稿” |
