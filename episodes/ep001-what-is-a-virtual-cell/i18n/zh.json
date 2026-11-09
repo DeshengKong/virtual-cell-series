@@ -84,5 +84,11 @@
   "cell_prot": "几种蛋白质的量",
   "drug": "药物",
   "cell_note": "示意：只画出本期用到的部分，细胞里还有许多结构没画",
-  "cell_dna": "DNA：基因图纸"
+  "cell_dna": "DNA：基因图纸",
+  "cover_tag": "虚拟细胞 · 第 1 期",
+  "cover_t1": "什么是虚拟细胞",
+  "cover_t2a": "没碰 A，",
+  "cover_t2b": "A 却翻倍了",
+  "cover_sub": "从零讲透：细胞状态 + 扰动 → 新状态",
+  "cover_before": "原来 1.0"
 }

@@ -314,5 +314,29 @@ function renderFrame(t){
   s+=subtitle(t);
   document.getElementById('svg').innerHTML=s;
 }
+/* ---------- 封面：缩略图尺寸下也要看得清，只放一个画面 + 两行字 ---------- */
+function renderCover(h=1080){
+  const W=1920, oy=(h-1080)/2;
+  const st=document.getElementById('stage'); st.style.height=h+'px';
+  const svg=document.getElementById('svg'); svg.setAttribute('height',h); svg.setAttribute('viewBox',`0 0 ${W} ${h}`);
+  let s=`<rect width="${W}" height="${h}" fill="${C.bg}"/><g transform="translate(0,${oy})">`;
+  // 左：文字
+  s+=T(110,170,STR.cover_tag,{size:40,fill:C.eb,mono:true,ls:4});
+  s+=T(104,330,STR.cover_t1,{size:120,w:900});
+  s+=T(104,490,STR.cover_t2a,{size:96,w:900,fill:C.t2});
+  s+=T(104,620,STR.cover_t2b,{size:96,w:900,fill:C.gold});
+  s+=T(110,760,STR.cover_sub,{size:40,fill:C.t3});
+  // 右：关掉 B 后的玩具细胞（数值来自 toycell 敲除 B 的稳态）
+  const v=SIM.koB.x[SIM.koB.x.length-1];
+  s+=`<g transform="translate(1040,170) scale(0.78)">`;
+  s+=net(120,250,380,{off:{B:1},r:58,font:52,pressOp:0.25});
+  s+=`<g><line x1="${120+380-50}" y1="200" x2="${120+380+50}" y2="300" stroke="${C.hand}" stroke-width="10" stroke-linecap="round"/><line x1="${120+380+50}" y1="200" x2="${120+380-50}" y2="300" stroke="${C.hand}" stroke-width="10" stroke-linecap="round"/></g>`;
+  s+=bars3(120,980,v,{scale:220,gap:380,bw:150,ghost:[1,1,1],offK:{B:1},hl:'A'});
+  // 在金色柱子上标出"原来 1.0"的高度，让"翻倍"一眼可见
+  s+=`<line x1="${120-75-20}" y1="${980-220}" x2="${120+75+20}" y2="${980-220}" stroke="${C.bg}" stroke-width="5" stroke-dasharray="14 10"/>`;
+  s+=T(120-75-30,980-220+14,STR.cover_before,{size:40,fill:C.t2,anchor:'end',w:700});
+  s+=`</g></g>`;
+  svg.innerHTML=s;
+}
 window.fontsReady=document.fonts.ready;
 </script></body></html>

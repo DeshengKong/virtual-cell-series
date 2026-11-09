@@ -82,7 +82,13 @@ def main():
     mode, out = args[0], pathlib.Path(args[1])
     with sync_playwright() as p:
         b, pg, bounds = open_page(p, lang)
-        if mode in ("stills", "sheet"):
+        if mode == "cover":  # 封面：16:9 和 16:10 各一张
+            out.mkdir(parents=True, exist_ok=True)
+            for name, h in (("cover-16x9.png", 1080), ("cover-16x10.png", 1200)):
+                pg.set_viewport_size({"width": 1920, "height": h})
+                pg.evaluate(f"renderCover({h})")
+                pg.locator("#stage").screenshot(path=str(out / name))
+        elif mode in ("stills", "sheet"):
             d = out if mode == "stills" else pathlib.Path(tempfile.mkdtemp())
             d.mkdir(parents=True, exist_ok=True)
             files = []
