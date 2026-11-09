@@ -1,0 +1,29 @@
+# 配音与声音模型：不公开
+*.wav
+*.mp3
+*.m4a
+**/audio/
+voice/
+
+# 渲染产物：体积大、可重生成（成片发在视频平台）
+**/out/
+**/frames*/
+*.mp4
+*.mov
+node_modules/
+.remotion/
+
+# Python
+__pycache__/
+*.egg-info/
+.venv/
+.pytest_cache/
+.ipynb_checkpoints/
+
+# 密钥
+.env
+.env.*
+*.key
+
+# 系统
+.DS_Store

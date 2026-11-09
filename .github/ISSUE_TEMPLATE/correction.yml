@@ -1,0 +1,27 @@
+name: 纠错
+description: 视频或脚本里有讲错、不准确的地方
+title: "[纠错] ep___ "
+labels: ["纠错"]
+body:
+  - type: input
+    id: episode
+    attributes:
+      label: 哪一期？
+      placeholder: 例如 ep003，或视频链接
+    validations:
+      required: true
+  - type: input
+    id: timestamp
+    attributes:
+      label: 视频时间点（可选）
+      placeholder: 例如 02:15
+  - type: textarea
+    id: issue
+    attributes:
+      label: 哪里不对？正确的应该是什么？
+    validations:
+      required: true
+  - type: textarea
+    id: source
+    attributes:
+      label: 依据（论文 DOI、教材页码等，可选但很有帮助）

@@ -1,0 +1,20 @@
+name: 没听懂 / 选题建议
+description: 某个地方没讲清楚，或者希望讲某个主题、某篇论文
+title: "[建议] "
+labels: ["建议"]
+body:
+  - type: dropdown
+    id: kind
+    attributes:
+      label: 类型
+      options:
+        - 某处没听懂
+        - 希望讲的主题或论文
+    validations:
+      required: true
+  - type: textarea
+    id: detail
+    attributes:
+      label: 具体说说
+    validations:
+      required: true
