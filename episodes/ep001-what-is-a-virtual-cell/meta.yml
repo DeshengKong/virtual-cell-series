@@ -1,0 +1,22 @@
+episode: 1
+slug: what-is-a-virtual-cell
+title:
+  zh: 什么是虚拟细胞
+  en: What Is a Virtual Cell?
+type: core
+map: [intro]          # 序章，四个问题都会提到
+prerequisites: []
+question:
+  zh: 虚拟细胞到底想预测什么？
+  en: What exactly does a virtual cell try to predict?
+takeaway:
+  zh: 虚拟细胞，就是输入细胞的状态和你做的事，预测它接下来会变成什么。
+  en: A virtual cell takes a cell's current state plus what you do to it, and predicts what the cell becomes next.
+voice:
+  name: Charon
+  style: docs/voice.md
+  generated: null
+status: script-draft
+release:
+  zh: null
+  en: null

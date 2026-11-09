@@ -20,7 +20,7 @@ epNNN-name/
 - 中文为主版本，先定稿；英文版从中文定稿翻译，术语以 `docs/glossary.md` 为准。
 - 动画代码里不写任何硬编码文字，一律从 `i18n/<lang>.json` 读取。
 - 画面事件时间点由各语言配音的逐字时间（faster-whisper）分别生成：`cues.zh.json`、`cues.en.json`。
-- 配音：Gemini TTS，每期在 `meta.yml` 里记录模型版本、音色名和风格提示词，保证可复现。音频文件不入库。
+- 配音：Gemini TTS 的 Charon 声线，固定风格提示见 `docs/voice.md`；每期在 `meta.yml` 里记录，保证可复现。音频文件不入库。
 - 发布节奏：中文先发 4–6 期定型，之后英文从第 1 期补齐，再两版每周同步。
 
 ## 每期讲法（硬规则）
