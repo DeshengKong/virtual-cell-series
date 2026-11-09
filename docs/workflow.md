@@ -50,6 +50,16 @@
 - 抽帧检查 + `volumedetect` 音量 + `silencedetect` 确认停顿。
 - 👤 用户看成片。定稿后更新 `meta.yml` 状态和 README 的"已发布"表。
 
+## 7. 英文版（每期中文定稿后同步做）
+
+1. **改写**：`script.en.md`，按意思改写而非直译，但**逐行与中文对应**（每节行数相同），画面节拍靠它对齐。在内部备注里记下和中文不同的地方。
+2. **审核**：英语母语新生复述 + 费曼/忠实度审核（对照中文定稿、facts、glossary），修订后重跑新生复述。👤 用户审稿。
+3. **画面文字**：`i18n/en.json`。西文专用版式改动一律用 `CJK()` 判断，保证中文画面逐像素不变（抽帧/封面 `cmp` 核对）。
+4. **配音**：音频放 `audio/en/`。`synthesize_speech` 单次上限 2000 字符，长节分两半合成后加 0.6 s 静音拼接。whisper 逐段比对；**疑似误读要把片段单独切出来再转写**，排除语境偏差（第 1 期 sec4 "cell" 被读成 "sale"，重合成后解决）。
+5. **卡点**：`~/.venvs/media/bin/python video/make_cues.py en`。停顿句在 `PAUSES` 里按英文切句后的那一句写。
+6. **节拍**：不重调阈值。`render.py` 按逐行锚点把英文时间映射到中文节拍；行内的关键句在 `SENT_ANCHORS` 里成对登记（如 压力没了 ↔ Now that nothing holds it back）。
+7. 联系表 → 成片 `render.py video out/epNNN-en-vN.mp4 --lang en 30` → 封面 `render.py cover out/en --lang en`。
+
 ## 色彩语义（全系列固定）
 
 钢蓝 = 柱子/正常；亮蓝箭头 = 推动；朱橙丁字头 = 压住；紫 = 人为干预（扰动、药物）；深灰 = 被关掉；金 = 临时焦点；绿只用于"正确 ✓"。

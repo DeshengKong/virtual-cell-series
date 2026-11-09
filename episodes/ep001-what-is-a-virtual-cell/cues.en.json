@@ -1,0 +1,465 @@
+{
+ "sections": [
+  [
+   0.0,
+   48.12
+  ],
+  [
+   48.92,
+   90.64
+  ],
+  [
+   91.44,
+   264.04
+  ],
+  [
+   264.84,
+   373.24
+  ],
+  [
+   374.04,
+   418.36
+  ],
+  [
+   419.16,
+   450.6
+  ]
+ ],
+ "subs": [
+  [
+   0.0,
+   4.58,
+   "Imagine you're sick, and your doctor has several drugs to choose from."
+  ],
+  [
+   5.4,
+   10.2,
+   "The doctor looks at clinical trial results, and sometimes at a genetic test."
+  ],
+  [
+   10.98,
+   16.28,
+   "But for one particular person, very often the only way to know is to try."
+  ],
+  [
+   17.46,
+   25.36,
+   "What if we could first let a \"virtual cell\" inside a computer react to each drug, and see in advance what would happen?"
+  ],
+  [
+   26.2,
+   29.16,
+   "That is what a virtual cell is trying to do."
+  ],
+  [
+   30.38,
+   35.42,
+   "Today, virtual cells can already predict some of the changes in certain lab experiments."
+  ],
+  [
+   35.72,
+   41.56,
+   "But they are still far from giving reliable answers for every kind of cell and every drug."
+  ],
+  [
+   42.38,
+   47.76,
+   "And whether a drug actually works once it's inside a human body is a different question altogether."
+  ],
+  [
+   48.92,
+   53.8,
+   "The whole idea of a virtual cell fits in one sentence:"
+  ],
+  [
+   54.68,
+   59.92,
+   "Input: the state the cell is in right now, plus what you do to it."
+  ],
+  [
+   60.3,
+   62.26,
+   "Output: what it turns into."
+  ],
+  [
+   63.36,
+   72.8,
+   "\"What you do to it\" could be adding a drug, or switching off a gene, or sending the cell a signal from outside, such as a hormone."
+  ],
+  [
+   73.94,
+   78.54,
+   "Labs have special tools for switching off genes, and we'll get to them later."
+  ],
+  [
+   79.62,
+   82.48,
+   "Scientists call each of these a \"perturbation\"."
+  ],
+  [
+   83.2,
+   84.56,
+   "So what is a \"state\"?"
+  ],
+  [
+   85.34,
+   90.28,
+   "That's easier to show than to explain, so let's build a cell and look."
+  ],
+  [
+   91.44,
+   94.86,
+   "This is a toy cell we designed ourselves."
+  ],
+  [
+   95.4,
+   98.32,
+   "It has only three genes: A, B and C."
+  ],
+  [
+   99.12,
+   101.9,
+   "You may have learned in school that a gene is like a blueprint."
+  ],
+  [
+   102.66,
+   110.74,
+   "In this toy, each gene is the blueprint for one kind of protein, and that protein changes how much of another gene's protein gets made."
+  ],
+  [
+   111.56,
+   116.76,
+   "From here on, \"A\" means gene A and its protein, and the same for B and C."
+  ],
+  [
+   117.56,
+   120.62,
+   "The three bars below show how much of each protein there is."
+  ],
+  [
+   121.32,
+   124.58,
+   "Protein A pushes up the making of B."
+  ],
+  [
+   124.86,
+   127.32,
+   "Protein B pushes up the making of C."
+  ],
+  [
+   127.74,
+   130.98,
+   "And protein C, in turn, holds back the making of A."
+  ],
+  [
+   131.56,
+   133.74,
+   "This T-shaped symbol means \"holds back\"."
+  ],
+  [
+   134.84,
+   138.58,
+   "The cell keeps making these proteins, and it also keeps breaking them down."
+  ],
+  [
+   139.38,
+   144.4,
+   "Left alone, production and breakdown balance out, and the three bars settle at a fixed height."
+  ],
+  [
+   145.08,
+   146.36,
+   "We'll call that height 1."
+  ],
+  [
+   147.1,
+   150.9,
+   "The heights of these three bars are this cell's \"state\" right now."
+  ],
+  [
+   151.3,
+   152.74,
+   "Scientists call it the cell state."
+  ],
+  [
+   153.56,
+   157.04,
+   "Now let's apply a perturbation: we switch off gene B."
+  ],
+  [
+   157.68,
+   162.8,
+   "The cell stops making protein B, and the protein B already there slowly breaks down to 0."
+  ],
+  [
+   164.18,
+   166.5,
+   "Take a guess first: we didn't touch A."
+  ],
+  [
+   167.02,
+   168.0,
+   "What happens to A?"
+  ],
+  [
+   170.94,
+   174.72,
+   "With B gone, C loses its push and slowly drops to 0."
+  ],
+  [
+   175.76,
+   177.53,
+   "Real cells wouldn't drop this cleanly."
+  ],
+  [
+   177.58,
+   179.26,
+   "That's a simplification in our toy."
+  ],
+  [
+   180.34,
+   182.68,
+   "And C had been holding A back all along."
+  ],
+  [
+   183.5,
+   187.9,
+   "In our toy's rules, C at its normal level cuts A's production in half."
+  ],
+  [
+   188.7,
+   191.64,
+   "Now that nothing holds it back, A is made at full speed."
+  ],
+  [
+   192.4,
+   199.64,
+   "Breakdown keeps pace with how much A there is, so twice the production means A rises to twice its old level, and stays there."
+  ],
+  [
+   200.96,
+   205.32,
+   "Notice this result: we never touched A, and yet A changed."
+  ],
+  [
+   206.02,
+   210.92,
+   "Now think about it: before we switched off B, all three bars read 1."
+  ],
+  [
+   211.72,
+   215.64,
+   "Looking only at those three numbers, could you have guessed that A would double?"
+  ],
+  [
+   216.46,
+   217.26000000000002,
+   "No."
+  ],
+  [
+   217.78,
+   225.14,
+   "What really decides the outcome is the set of rules between the bars: who pushes whom, and who holds back whom."
+  ],
+  [
+   226.18,
+   228.96,
+   "So knowing what a cell looks like right now isn't enough."
+  ],
+  [
+   229.5,
+   231.56,
+   "You also need to know the rules inside."
+  ],
+  [
+   232.82,
+   234.22,
+   "Back to the machine from the start."
+  ],
+  [
+   234.74,
+   239.68,
+   "The original heights of the three bars are \"the cell's state right now\"."
+  ],
+  [
+   240.02,
+   242.16,
+   "Switching off B is \"what you did\"."
+  ],
+  [
+   242.9,
+   247.98,
+   "And once things calm down, wherever the bars settle is the \"new state\" the machine gives back."
+  ],
+  [
+   248.94,
+   252.34,
+   "And what's inside the machine is exactly those few rules."
+  ],
+  [
+   253.08,
+   256.24,
+   "That \"half\" and that \"twice\" weren't pulled out of the air."
+  ],
+  [
+   256.76,
+   263.56,
+   "They come straight out of the rules we set, and in later episodes you'll work them out yourself, with nothing more than arithmetic."
+  ],
+  [
+   264.84,
+   270.3,
+   "This is a bit like a weather forecast: put in today's weather, compute tomorrow's."
+  ],
+  [
+   270.54,
+   274.88,
+   "But there are three differences, and they're exactly the hardest parts of this field."
+  ],
+  [
+   275.68,
+   280.74,
+   "First: a weather forecast mainly predicts how the atmosphere changes on its own."
+  ],
+  [
+   281.38,
+   286.22,
+   "A virtual cell also has to answer: if we deliberately poke the cell, what happens?"
+  ],
+  [
+   287.32,
+   293.58,
+   "Second: we can watch the sky all day, but it's very hard to watch a cell \"from start to finish\"."
+  ],
+  [
+   294.1,
+   305.24,
+   "To measure thousands of genes in one cell at once, the most common method, called single-cell sequencing, first breaks the cell open, so after one measurement, that cell is gone."
+  ],
+  [
+   306.08,
+   312.18,
+   "Newer methods that don't break the cell do exist, but they're still far from recording continuously, like a video."
+  ],
+  [
+   313.12,
+   320.15,
+   "And single-cell sequencing mostly reads RNA, a working copy of the blueprint, not the proteins in our bars."
+  ],
+  [
+   320.2,
+   323.86,
+   "So even the reading we do get is one step removed."
+  ],
+  [
+   325.02,
+   326.4,
+   "So what can we do?"
+  ],
+  [
+   326.9,
+   337.26,
+   "The same thing you did with controlled experiments in school: take two groups of similar cells, leave one alone, perturb the other, and compare the two groups."
+  ],
+  [
+   338.08,
+   344.74,
+   "But \"similar\" doesn't mean \"identical\", and that brings new problems of its own, which we'll come back to in a later episode."
+  ],
+  [
+   345.84,
+   354.3,
+   "Third, and most fundamental: weather forecasting rests on well-established physics equations, even though the details still need approximations."
+  ],
+  [
+   355.02,
+   358.56,
+   "In a cell, many of the rules themselves are still unknown."
+  ],
+  [
+   359.22,
+   362.0,
+   "The three rules in our toy were set by us."
+  ],
+  [
+   362.62,
+   372.94,
+   "A real human cell has nearly twenty thousand genes that code for proteins, and for most of them, who pushes whom and who holds back whom is still unknown."
+  ],
+  [
+   374.04,
+   377.7,
+   "If we don't know the rules, how do we build this machine?"
+  ],
+  [
+   378.46,
+   380.3,
+   "Broadly, there are two approaches."
+  ],
+  [
+   381.0,
+   389.14,
+   "One is what we did with the toy cell: first work out the rules one by one, write them as math, and let the computer calculate."
+  ],
+  [
+   389.92,
+   392.56,
+   "The other: don't write the rules first."
+  ],
+  [
+   393.12,
+   402.12,
+   "Instead, collect lots of the comparison data we just described: one group left alone and one group perturbed, thousands of times over."
+  ],
+  [
+   402.62,
+   408.2,
+   "Then let artificial intelligence find the rules in those differences on its own."
+  ],
+  [
+   409.08,
+   414.08,
+   "Whichever road we take, the machine we build has to be tested against real experiments."
+  ],
+  [
+   414.7,
+   417.96,
+   "And in actual research, the two roads are often combined."
+  ],
+  [
+   419.16,
+   423.78,
+   "Every episode from here on will take on one part of this machine."
+  ],
+  [
+   424.54,
+   428.02,
+   "If you remember one sentence from this episode, make it this:"
+  ],
+  [
+   428.66,
+   434.88,
+   "A virtual cell takes a cell's state and what you do to it, and predicts what the cell turns into."
+  ],
+  [
+   436.04,
+   441.1,
+   "Here's a question to think about: what if we switch off C instead of B?"
+  ],
+  [
+   441.84,
+   443.64,
+   "What happens to A and B?"
+  ],
+  [
+   444.38,
+   447.24,
+   "Will B rise to exactly 2, just like A?"
+  ],
+  [
+   447.8,
+   450.28,
+   "We'll reveal the answer at the start of the next episode."
+  ]
+ ]
+}

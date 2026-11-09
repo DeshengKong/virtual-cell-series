@@ -29,6 +29,7 @@ SCRIPT = {"zh": ("script.md", "## 内部备注"), "en": ("script.en.md", "## Int
 # 中文按句末标点切；英文按 . ? ! ; 后跟空格切（不切 "e.g." 之类，本期没有）
 SPLIT = {"zh": r"(?<=[。？！；])|\n", "en": r"(?<=[.?!;])\s+|\n"}
 SR = 24000
+AUD = EP / "audio" if LANG == "zh" else EP / "audio" / LANG   # 中文沿用原路径；其他语言放 audio/<lang>/
 
 
 def sections_text():
@@ -87,7 +88,7 @@ def main():
     pcm_out, subs, bounds, t0 = b"", [], [], 0.0
     silence = lambda s: b"\x00\x00" * int(round(s * SR))
     for i, sents in enumerate(secs, 1):
-        f = EP / "audio" / f"sec{i}.wav"
+        f = AUD / f"sec{i}.wav"
         pcm = read_pcm(f)
         segs, _ = model.transcribe(str(f), language=LANG, word_timestamps=True)
         words = [w for s in segs for w in s.words]
@@ -110,7 +111,7 @@ def main():
     # 字幕：一句一换，句间停顿不显示；末尾延长到下一句开始前 0.15 s 以内
     for a, b in zip(subs, subs[1:]):
         a[1] = min(max(a[1], a[0] + 0.8), b[0] - 0.05)
-    with wave.open(str(EP / "audio" / "vo_final.wav"), "wb") as w:
+    with wave.open(str(AUD / "vo_final.wav"), "wb") as w:
         w.setnchannels(1), w.setsampwidth(2), w.setframerate(SR), w.writeframes(pcm_out)
     (EP / f"cues.{LANG}.json").write_text(json.dumps({"sections": bounds, "subs": subs}, ensure_ascii=False, indent=1), encoding="utf-8")
     print("total", round(len(pcm_out) / 2 / SR, 1), "s")

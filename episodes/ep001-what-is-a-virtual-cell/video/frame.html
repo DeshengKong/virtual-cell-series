@@ -52,9 +52,7 @@ function subtitle(t){
   const cur=SUBS.find(x=>t>=x[0]&&t<x[1]); if(!cur) return '';
   const txt=cur[2];
   if(!/[\u4e00-\u9fff]/.test(txt)){ // 西文：按单词折行，每行 ≤ 64 字符；超过两行则按字数比例分页显示
-    const lines=[]; let ln='';
-    for(const w of txt.split(' ')){ if(ln&&(ln+' '+w).length>64){lines.push(ln);ln=w;} else ln=ln?ln+' '+w:w; }
-    if(ln) lines.push(ln);
+    const nL=Math.ceil(txt.length/64), lines=wrapLatin(txt,Math.min(64,Math.ceil(txt.length/nL)+6)); // 行长均衡，避免单词落单
     const pages=[]; for(let i=0;i<lines.length;i+=2) pages.push(lines.slice(i,i+2));
     const tot=txt.length, el=(t-cur[0])/(cur[1]-cur[0])*tot; let acc=0,pg=pages[pages.length-1];
     for(const P of pages){acc+=P.join(' ').length+1; if(el<acc){pg=P;break;}}
@@ -343,13 +341,14 @@ function renderCover(h=1080){
   let s=`<rect width="${W}" height="${h}" fill="${C.bg}"/><g transform="translate(0,${oy})">`;
   // 左：文字
   s+=T(110,170,STR.cover_tag,{size:40,fill:C.eb,mono:true,ls:4});
-  s+=T(104,330,STR.cover_t1,{size:120,w:900});
-  s+=T(104,490,STR.cover_t2a,{size:96,w:900,fill:C.t2});
-  s+=T(104,620,STR.cover_t2b,{size:96,w:900,fill:C.gold});
-  s+=T(110,760,STR.cover_sub,{size:40,fill:C.t3});
+  const zh=CJK(STR.cover_t1); // 西文更长：字号略小、右侧图缩小右移，中文版保持原样
+  s+=T(104,330,STR.cover_t1,{size:zh?120:92,w:900});
+  s+=T(104,490,STR.cover_t2a,{size:zh?96:80,w:900,fill:C.t2});
+  s+=T(104,620,STR.cover_t2b,{size:zh?96:80,w:900,fill:C.gold});
+  s+=T(110,760,STR.cover_sub,{size:zh?40:36,fill:C.t3});
   // 右：关掉 B 后的玩具细胞（数值来自 toycell 敲除 B 的稳态）
   const v=SIM.koB.x[SIM.koB.x.length-1];
-  s+=`<g transform="translate(1040,170) scale(0.78)">`;
+  s+=zh?`<g transform="translate(1040,170) scale(0.78)">`:`<g transform="translate(1230,250) scale(0.62)">`;
   s+=net(120,250,380,{off:{B:1},r:58,font:52,pressOp:0.25});
   s+=`<g><line x1="${120+380-50}" y1="200" x2="${120+380+50}" y2="300" stroke="${C.hand}" stroke-width="10" stroke-linecap="round"/><line x1="${120+380+50}" y1="200" x2="${120+380-50}" y2="300" stroke="${C.hand}" stroke-width="10" stroke-linecap="round"/></g>`;
   s+=bars3(120,980,v,{scale:220,gap:380,bw:150,ghost:[1,1,1],offK:{B:1},hl:'A'});

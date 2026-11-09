@@ -54,6 +54,8 @@ SCRIPT = {"zh": ("script.md", "## 内部备注"), "en": ("script.en.md", "## Int
 SPLIT = {"zh": r"(?<=[。？！；])|\n", "en": r"(?<=[.?!;])\s+|\n"}
 PAUSE_LINES = {"zh": "你先猜一下", "en": "Take a guess first"}
 PAUSE_S = 2.0
+# 行内的关键节拍：同一行里的某一句在各语言里的开头（画面在这句话开始时变化）
+SENT_ANCHORS = [{"zh": "压力没了", "en": "Now that nothing holds it back"}]
 
 
 def line_anchors(lang):
@@ -70,6 +72,10 @@ def line_anchors(lang):
         for line in filter(None, body):
             n = len([x for x in re.split(SPLIT[lang], line) if x and x.strip()])
             anchors.append((subs[k][0] - a) / (b - a))
+            for a_ in SENT_ANCHORS:  # 行内句子锚点
+                for j in range(n):
+                    if a_[lang] in subs[k + j][2] and j:
+                        anchors.append((subs[k + j][0] - a) / (b - a))
             if PAUSE_LINES[lang] in line:  # 停顿开始处也作为锚点
                 nxt = subs[k + n][0] if k + n < len(subs) else b
                 anchors.append((nxt - PAUSE_S - a) / (b - a))
@@ -144,7 +150,8 @@ def main():
                 subprocess.run(["ffmpeg", "-y", "-loglevel", "error", *inputs, "-filter_complex", ";".join(filt), str(out)], check=True)
         else:
             fps = int(args[2]) if len(args) > 2 else 30
-            audio = EP / "audio" / ("vo_final.wav" if (EP / f"cues.{lang}.json").exists() else "vo_raw.wav")
+            aud = EP / "audio" if lang == "zh" else EP / "audio" / lang
+            audio = aud / ("vo_final.wav" if (EP / f"cues.{lang}.json").exists() else "vo_raw.wav")
             with wave.open(str(audio)) as w:
                 end = w.getnframes() / w.getframerate() + 1.5  # 片尾留 1.5 s 静帧
             with tempfile.TemporaryDirectory() as d:
