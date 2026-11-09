@@ -56,8 +56,14 @@ def open_page(p, lang):
     pg.goto(SRC.as_uri())
     pg.evaluate("window.fontsReady")
     strs = json.loads((EP / "i18n" / f"{lang}.json").read_text(encoding="utf-8"))
-    bounds = section_bounds()
-    pg.evaluate("([s,u,b])=>{STR=s;SUBS=u;SEC=b;}", [strs, subtitles(bounds), bounds])
+    cues = EP / f"cues.{lang}.json"
+    if cues.exists():  # 逐字卡点结果（make_cues.py）
+        c = json.loads(cues.read_text(encoding="utf-8"))
+        bounds, subs = c["sections"], c["subs"]
+    else:
+        bounds = section_bounds()
+        subs = subtitles(bounds)
+    pg.evaluate("([s,u,b])=>{STR=s;SUBS=u;SEC=b;}", [strs, subs, bounds])
     return b, pg, bounds
 
 
@@ -97,15 +103,17 @@ def main():
                 subprocess.run(["ffmpeg", "-y", "-loglevel", "error", *inputs, "-filter_complex", ";".join(filt), str(out)], check=True)
         else:
             fps = int(args[2]) if len(args) > 2 else 30
-            end = bounds[-1][1]
+            audio = EP / "audio" / ("vo_final.wav" if (EP / f"cues.{lang}.json").exists() else "vo_raw.wav")
+            with wave.open(str(audio)) as w:
+                end = w.getnframes() / w.getframerate() + 1.5  # 片尾留 1.5 s 静帧
             with tempfile.TemporaryDirectory() as d:
                 n = int(round(end * fps))
                 for i in range(n):
                     shot(pg, i / fps, pathlib.Path(d) / f"{i:05d}.png")
                 out.parent.mkdir(parents=True, exist_ok=True)
                 subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-framerate", str(fps), "-i", f"{d}/%05d.png",
-                                "-i", str(EP / "audio" / "vo_raw.wav"), "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "18",
-                                "-c:a", "aac", "-b:a", "192k", "-shortest", str(out)], check=True)
+                                "-i", str(audio), "-c:v", "libx264", "-pix_fmt", "yuv420p", "-crf", "18",
+                                "-c:a", "aac", "-b:a", "192k", "-af", "apad", "-shortest", str(out)], check=True)
         b.close()
 
 
