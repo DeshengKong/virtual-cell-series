@@ -137,18 +137,37 @@ function sec1(t,lt,d){ // 开场
   s+=chrome(t,showHonest?STR.titles.s1b:STR.titles.s1);
   // 细胞
   const o=ease(ramp(lt,0,2.5)*(showHonest?1-ramp(f,0.62,0.68):1));
-  s+=`<ellipse cx="1000" cy="560" rx="300" ry="230" fill="#14202a" stroke="${C.steel}" stroke-width="4" opacity="${o}"/>`;
-  s+=`<ellipse cx="1060" cy="520" rx="80" ry="64" fill="none" stroke="${C.t3}" stroke-width="3" stroke-dasharray="6 6" opacity="${o}"/>`;
-  // 药瓶
-  for(let i=0;i<4;i++){
-    const p=ease(ramp(f,0.25+i*0.06,0.45+i*0.06)), x=360+i*20+p*420, y=380+i*120-p*(i-1.5)*40;
-    const bo=o*clamp(ramp(f,0.05+i*0.04,0.15+i*0.04))*(1-p*0.6);
-    s+=`<g opacity="${bo}"><rect x="${x-26}" y="${y-40}" width="52" height="80" rx="10" fill="${C.card}" stroke="${C.hand}" stroke-width="3"/><rect x="${x-16}" y="${y-56}" width="32" height="18" rx="4" fill="${C.hand}"/></g>`;
-  }
-  // 细胞内小柱子随药起伏（示意）
-  const wob=ramp(f,0.35,0.6);
+  // 细胞：膜（x 720–1400, y 310–810）+ 细胞核 + 胞质里的"蛋白质读数"，所有内部元素都留在膜内
+  const CX=1060,CY=560,RX=340,RY=250;
+  s+=`<ellipse cx="${CX}" cy="${CY}" rx="${RX}" ry="${RY}" fill="#14202a" stroke="${C.steel}" stroke-width="4" opacity="${o}"/>`;
+  s+=`<ellipse cx="930" cy="510" rx="120" ry="92" fill="#1b2833" stroke="${C.t3}" stroke-width="3" opacity="${o}"/>`;
+  // 核内一小段 DNA（双螺旋示意）
+  let dna='';for(let k=0;k<2;k++){let d='';for(let x=0;x<=150;x+=5){const y=Math.sin(x/16+k*Math.PI)*14;d+=(x?'L':'M')+(855+x)+','+(520+y);}dna+=`<path d="${d}" fill="none" stroke="${C.t3}" stroke-width="2.5"/>`;}
+  s+=`<g opacity="${o}">${dna}</g>`;
+  s+=T(930,470,STR.cell_nucleus,{size:24,fill:C.t2,anchor:'middle',op:o,w:700});
+  s+=T(930,572,STR.cell_dna,{size:22,fill:C.t3,anchor:'middle',op:o});
+  // 胞质里三种蛋白质的量（与后面的玩具细胞同一套画法），随药起伏
+  const wob=ramp(f,0.38,0.6);
   const v=[1+0.5*Math.sin(lt*1.3)*wob,1-0.4*Math.sin(lt*1.1+1)*wob,1+0.3*Math.sin(lt*0.9+2)*wob];
-  s+=`<g opacity="${o}">`+bars3(920,690,v,{scale:70,gap:80,bw:44,labels:false})+`</g>`;
+  s+=`<g opacity="${o}">`+bars3(1130,690,v,{scale:60,gap:62,bw:36,labels:false})+`</g>`;
+  ['A','B','C'].forEach((k,i)=>s+=T(1130+i*62,722,k,{size:22,fill:C.t3,anchor:'middle',op:o,w:700}));
+  s+=T(1192,540,STR.cell_prot,{size:24,fill:C.steel,anchor:'middle',op:o});
+  // 药瓶始终在膜外；放出药物分子（紫点）穿过膜进入胞质
+  for(let i=0;i<4;i++){
+    const bx=430, by=380+i*120;
+    const bo=o*clamp(ramp(f,0.05+i*0.04,0.15+i*0.04));
+    s+=`<g opacity="${bo}"><rect x="${bx-26}" y="${by-40}" width="52" height="80" rx="10" fill="${C.card}" stroke="${C.hand}" stroke-width="3"/><rect x="${bx-16}" y="${by-56}" width="32" height="18" rx="4" fill="${C.hand}"/></g>`;
+    for(let j=0;j<3;j++){
+      const p=ease(ramp(f,0.22+i*0.04+j*0.02,0.38+i*0.04+j*0.02)); if(p<=0) continue;
+      const tx=1090+((i*3+j)*41)%200, ty=575+((i*3+j)*13)%30;  // 终点：胞质内、读数附近
+      // 二次贝塞尔：从细胞核下方绕过，避免看起来像药物进了细胞核
+      const x0=bx+30,y0=by,qx=900,qy=780,u=1-p;
+      const x=u*u*x0+2*u*p*qx+p*p*tx, y=u*u*y0+2*u*p*qy+p*p*ty;
+      s+=`<circle cx="${x}" cy="${y}" r="7" fill="${C.hand}" opacity="${o}"/>`;
+    }
+  }
+  s+=T(430,820,STR.drug,{size:24,fill:C.hand,anchor:'middle',op:o*clamp(ramp(f,0.05,0.15))});
+  s+=T(CX,860,STR.cell_note,{size:22,fill:C.t3,anchor:'middle',op:o});
   if(showHonest){
     const a=ease(ramp(f,0.66,0.74)), b=ease(ramp(f,0.78,0.86)), c=ease(ramp(f,0.9,0.97));
     s+=R(260,330,640,300,{op:a}); s+=T(300,400,STR.now_can,{size:30,fill:C.steel,w:700,op:a});
