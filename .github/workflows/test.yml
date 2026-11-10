@@ -1,13 +1,14 @@
-name: toycell tests
+name: tests
 
 on:
   push:
-    paths: ["toycell/**", ".github/workflows/test.yml"]
+    paths: ["toycell/**", "docs/**", "episodes/**/meta.yml", "tools/**", ".github/workflows/test.yml"]
   pull_request:
-    paths: ["toycell/**"]
+    paths: ["toycell/**", "docs/**", "episodes/**/meta.yml", "tools/**"]
 
 jobs:
-  test:
+  toycell:
+    name: toycell tests (incl. published numbers)
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -19,3 +20,14 @@ jobs:
           python-version: "3.12"
       - run: pip install -e ".[dev]"
       - run: python -m pytest -q
+
+  ledgers:
+    name: concept ledger and prerequisites
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install pyyaml
+      - run: python tools/check_prereq.py

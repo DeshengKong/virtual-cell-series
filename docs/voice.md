@@ -19,5 +19,5 @@
 
 - 每期在 `meta.yml` 记录声线、风格提示、生成日期和服务版本。
 - 生成的音频不入库，本地保存在 `episodes/epNNN/audio/`（已被 .gitignore 排除）。
-- 新术语第一次配音后，用 faster-whisper 转写抽查读音；读错的写进 `docs/glossary.md` 的备注栏，并在脚本里改写。
+- 新术语第一次配音后，用 faster-whisper 转写抽查读音；读错的写进 `docs/concepts.yml` 该概念的 `tts` 字段（记下读错成什么、怎么改写的），并在脚本里改写。
 - 如果 Charon 音色被上游更新而明显变化，全系列从当期起统一切换，并在 README 注明。

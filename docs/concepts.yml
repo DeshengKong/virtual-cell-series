@@ -1,0 +1,263 @@
+# 概念账：全系列每个概念在哪一期引入、当时怎么说的、类比是什么、类比在哪里失效。
+# 取代原来的 docs/glossary.md（中英用词也以本文件为准）。
+#
+# 字段
+#   id          稳定的英文短名，meta.yml 的 uses / introduces 和 frontier-pool.md 的 needs 都引用它
+#   zh / en     全系列统一用词（画面和解说词都用这个，不换说法）
+#   kind        term     正式术语（每期新术语 ≤ 3 个，按这个数）
+#               everyday 日常说法（还没给正式名字；formal 里写将来的正式名字）
+#               school   默认观众已有的高中常识（introduced: 0）
+#   introduced  引入的期数；null = 还没讲。planned 写计划在哪讲（期号或"第 N 圈"）
+#   mentioned   只点了名字、没讲清的期数。被点过名 ≠ 可以当前置用
+#   said        引入时的原话或大意（之后再用到，说法要对得上）
+#   analogy / fails   用过的类比，以及类比在哪里失效。fails 为 null 表示当期没说，是一笔要补的账
+#   tts         配音读音备注（读错过什么、怎么改写的），可选
+#
+# 检查：python tools/check_prereq.py（规则见该脚本开头）。写新一期之前先跑：
+#   python tools/check_prereq.py --plan 2 --uses cell-state,push,hold-back,balance
+
+version: 1
+
+concepts:
+  # ---- 高中常识（默认已有） ----
+  - {id: cell, zh: 细胞, en: cell, kind: school, introduced: 0}
+  - {id: gene, zh: 基因, en: gene, kind: school, introduced: 0}
+  - {id: protein, zh: 蛋白质, en: protein, kind: school, introduced: 0}
+  - {id: dna, zh: DNA, en: DNA, kind: school, introduced: 0}
+  - {id: controlled-experiment, zh: 对照实验, en: controlled experiment, kind: school, introduced: 0}
+  - {id: arithmetic, zh: 四则运算与分数, en: arithmetic and fractions, kind: school, introduced: 0}
+
+  # ---- 第 1 期 ----
+  - id: virtual-cell
+    zh: 虚拟细胞
+    en: virtual cell
+    kind: term
+    introduced: 1
+    said: 输入细胞现在的状态和你对它做的事，输出它会变成什么。
+    analogy: 天气预报（输入今天的天气，算出明天的）
+    fails: 三处不同，当期已说：还要回答"故意动它一下会怎样"；细胞很难从头看到尾；细胞里很多规则本身还不知道。
+
+  - id: cell-state
+    zh: 细胞状态
+    en: cell state
+    kind: term
+    introduced: 1
+    said: 三根柱子的高度（每种蛋白有多少），就是这个细胞现在的状态。
+    note: 第 1 期的"状态"是蛋白的量。实际量到的主要是 RNA，隔着一层（第 6 期、第 2 圈展开，一句话 v3）。
+
+  - id: perturbation
+    zh: 扰动
+    en: perturbation
+    kind: term
+    introduced: 1
+    said: 你对细胞做的事：加一种药、关掉一个基因、给它一个外来的信号。
+    note: 第 5 期起多一层意思：扰动也是把规则逼出来的工具。
+
+  - id: toy-cell
+    zh: 玩具细胞
+    en: toy cell
+    kind: everyday
+    introduced: 1
+    said: 我们自己设计的细胞，只有 A、B、C 三个基因；规则是我们定的。
+    note: 画面上常驻"玩具细胞（我们设计的）"。说到 A 同时指基因 A 和它的蛋白，第 6 期把两者分开。
+
+  - id: push
+    zh: 推动
+    en: pushes (up)
+    kind: everyday
+    formal: {zh: 激活, en: activation}
+    introduced: 1
+    said: A 蛋白推动 B 的生产。画面：亮蓝箭头；图例 推动 / pushes。
+    note: 正式名字"激活"还没给。给名字时要接回"推动"。
+
+  - id: hold-back
+    zh: 压住
+    en: holds back
+    kind: everyday
+    formal: {zh: 抑制, en: repression}
+    introduced: 1
+    said: C 蛋白反过来压住 A 的生产。画面：朱橙丁字头。
+    note: 正式名字"抑制"还没给。
+
+  - id: switch-off-gene
+    zh: 关掉基因
+    en: switch off a gene
+    kind: everyday
+    formal: {zh: 基因敲除, en: gene knockout}
+    introduced: 1
+    said: 细胞不再造这种蛋白，已有的慢慢分解到 0。画面：变成深灰。
+    note: 真实细胞不会降得这么干脆（欠账 P4）；怎么关（欠账 P2）。
+
+  - id: balance
+    zh: 打平
+    en: balance out
+    kind: everyday
+    formal: {zh: 稳态, en: steady state}
+    introduced: 1
+    said: 细胞不停地造蛋白，也不停地分解；不去动它，生产和分解打平，柱子停在固定高度，把这个高度叫 1。
+    note: 第 3 期区分"稳定下来"和"半路上"时再给正式名字。
+
+  - id: full-power
+    zh: 开足马力 / 一半的马力
+    en: full power / half power
+    kind: everyday
+    introduced: 1
+    said: 玩具的规则里，C 在正常水平时把 A 的生产压到一半；压力没了，A 的生产开足马力，稳定在原来的 2 倍。
+    note: 第 2 期把"一半"写成算式（欠账 P1）。
+
+  - id: blueprint
+    zh: 图纸
+    en: blueprint
+    kind: everyday
+    introduced: 1
+    said: 基因像图纸；玩具细胞里每个基因是一种蛋白的图纸。
+    analogy: 图纸
+    fails: null   # 第 1 期没说在哪里失效，第 2 圈 · 中心法则补（promises.md M2）
+
+  - id: working-copy
+    zh: 图纸的复印件
+    en: working copy of the blueprint
+    kind: everyday
+    formal: {zh: RNA, en: RNA}
+    introduced: 1
+    said: 单细胞测序读到的主要是 RNA（图纸的复印件），不是柱子代表的蛋白，所以读数隔着一层。
+    analogy: 复印件
+    fails: null   # 同上
+
+  - id: compare-two-groups
+    zh: 两群细胞对照
+    en: comparing two groups of cells
+    kind: everyday
+    introduced: 1
+    said: 取两群差不多的细胞，一群不动，一群扰动，比较两群的差别。但"差不多"不等于"一模一样"。
+    note: 第 7 期专门讲（欠账 P3）。
+
+  - id: two-roads
+    zh: 两条路
+    en: two roads
+    kind: everyday
+    formal: {zh: 机理模型 / 数据驱动模型, en: mechanistic model / data-driven model}
+    introduced: 1
+    said: 一条路先弄清规则、写成数学再算；另一条路收集大量对照数据，让人工智能自己从差别里找规律。无论哪条路都要拿真实实验检验。
+    note: 正式名字第 3 圈给。
+
+  - id: four-question-map
+    zh: 四问题地图
+    en: the four-question map
+    kind: everyday
+    introduced: 1
+    said: 画面出现四个框（状态、扰动、怎么造机器、怎么检验），第 1 期没有念出来。
+    note: 第 2 期开头第一次念出来并亮一格。
+
+  # ---- 第 1 期只点了名字 ----
+  - id: single-cell-sequencing
+    zh: 单细胞测序
+    en: single-cell sequencing
+    kind: term
+    introduced: null
+    planned: 第 2 圈
+    mentioned: [1]
+    formal: {zh: 单细胞 RNA 测序, en: single-cell RNA sequencing (scRNA-seq)}
+    said: 第 1 期只说：最常用的办法，要先把细胞打碎，量一次细胞就没了。
+
+  # ---- 第 1 圈计划（第 2–11 期；定稿时把 introduced 填上，said 改成原话） ----
+  - id: rule-formula
+    zh: 规则算式
+    en: the rule as a formula
+    kind: everyday
+    introduced: null
+    planned: 2
+    said: （计划）"压住"和"推动"各是一个算式；生产 = 最大产量 × 一个 0 到 1 之间的系数。
+
+  - id: saturation
+    zh: 饱和
+    en: saturation
+    kind: term
+    introduced: null
+    planned: 2
+    said: （计划）推动有上限：推的再多，生产也到不了最大产量。关掉 C 后 B 只到 1.6 就是因为这个。
+
+  - id: step-forward
+    zh: 一步一步往前算
+    en: stepping forward in time
+    kind: everyday
+    formal: {zh: 模拟, en: simulation}
+    introduced: null
+    planned: 3
+
+  - id: steady-state
+    zh: 稳态
+    en: steady state
+    kind: term
+    introduced: null
+    planned: 3
+    said: （计划）"打平"的正式名字；和"半路上"相对。
+
+  - id: feedback
+    zh: 反馈
+    en: feedback
+    kind: term
+    introduced: null
+    planned: 4
+
+  - id: dose
+    zh: 剂量
+    en: dose
+    kind: term
+    introduced: null
+    planned: 4
+
+  - id: wiring
+    zh: 接线
+    en: wiring
+    kind: everyday
+    formal: {zh: 调控网络, en: regulatory network}
+    introduced: null
+    planned: 5
+
+  - id: measurement-noise
+    zh: 测量噪声
+    en: measurement noise
+    kind: term
+    introduced: null
+    planned: 6
+
+  - id: cell-population
+    zh: 一群细胞
+    en: a population of cells
+    kind: everyday
+    introduced: null
+    planned: 7
+
+  - id: learn-from-data
+    zh: 从数据里学
+    en: learning from data
+    kind: everyday
+    introduced: null
+    planned: 8
+
+  - id: baseline
+    zh: 基线
+    en: baseline
+    kind: term
+    introduced: null
+    planned: 9
+    said: （计划）最笨的办法：什么都不学能得几分。
+
+  - id: held-out
+    zh: 留出没见过的考题
+    en: held-out test
+    kind: everyday
+    introduced: null
+    planned: 10
+
+  - id: generalization
+    zh: 泛化
+    en: generalization
+    kind: term
+    introduced: null
+    planned: 10
+
+  # ---- 旧术语表里有、还没排到的正式名字 ----
+  - {id: central-dogma, zh: 中心法则, en: central dogma, kind: term, introduced: null, planned: 第 2 圈}
+  - {id: gene-expression, zh: 基因表达, en: gene expression, kind: term, introduced: null, planned: 第 2 圈}

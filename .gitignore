@@ -28,3 +28,6 @@ __pycache__/
 # 系统
 .DS_Store
 .venv-render/
+
+# Claude Code 本机设置（agents 提示词要入库，本机设置不入库）
+.claude/settings.local.json

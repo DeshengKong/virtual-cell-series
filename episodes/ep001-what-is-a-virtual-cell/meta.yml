@@ -6,18 +6,22 @@ title:
 type: core
 map: [intro]          # 序章，四个问题都会提到
 prerequisites: []
+# 概念账（docs/concepts.yml 的 id）。tools/check_prereq.py 检查：uses 必须在更早的期数引入过，或在本期 introduces 里
+introduces: [virtual-cell, cell-state, perturbation, toy-cell, push, hold-back, switch-off-gene, balance, full-power, blueprint, working-copy, compare-two-groups, two-roads, four-question-map]
+uses: [cell, gene, protein, dna, controlled-experiment]
 question:
   zh: 虚拟细胞到底想预测什么？
   en: What exactly does a virtual cell try to predict?
 takeaway:
-  zh: 虚拟细胞，就是输入细胞的状态和你做的事，预测它接下来会变成什么。
-  en: A virtual cell takes a cell's current state plus what you do to it, and predicts what the cell becomes next.
+  zh: 虚拟细胞，就是输入细胞的状态和你做的事，预测它会变成什么。   # 与成片一致（一句话 v1）
+  en: A virtual cell takes a cell's state and what you do to it, and predicts what the cell turns into.
 voice:
   name: Charon
   style: docs/voice.md
   generated: 2026-11-08  # gemini-voice-mcp, script v0.4, 6 段合成，原始总长 342.5 s
   generated_en: 2026-11-09  # script.en.md v0.3, en-US；sec3/sec4 各分两次合成后拼接（单次上限 2000 字符），原始总长 446.9 s
 status: published  # 2026-11-09 中文 B 站、英文 YouTube
+published: 2026-11-09   # 首次公开的日期；发布后第 14 天复盘按它算
 release:
   zh: https://www.bilibili.com/video/BV1k3W86SEYT  # 2026-11-09 投稿
   en: https://youtu.be/ANYJK46OmbQ  # 2026-11-09 公开

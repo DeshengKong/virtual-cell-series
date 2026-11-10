@@ -141,7 +141,7 @@ We'll reveal the answer at the start of the next episode.
 Same model and numbers as the Chinese script (`script.md`, "内部备注"): toycell v0.1; KO B → A 2, B 0, C 0; KO C → A 2, B 1.6, C 0.
 
 Adaptation choices:
-- 图纸 → "blueprint"; 复印件 → "photocopy of the blueprint" (standard DNA/RNA analogy in English).
+- 图纸 → "blueprint"; 复印件 → "working copy of the blueprint" (not "photocopy"; fixed in `docs/concepts.yml`).
 - 推动 / 压住 → "pushes (up)" and "holds back", used consistently; on screen: "pushes" / "holds back".
 - 开足马力 → "full power"; 打平 → "balance out".
 - "高中" → "in school" (curricula differ by country).
