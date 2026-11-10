@@ -10,13 +10,16 @@
 
 | # | 许于 | 原话（中文 / English） | 还在哪 | 状态 |
 |---|---|---|---|---|
-| P0 | 第 1 期 结尾 | 思考题：关掉 C，A 和 B 会怎么变？B 会不会也正好升到 2？"下一期开头揭晓答案。" / "We'll reveal the answer at the start of the next episode." | 第 2 期冷开场：A = 2，B = 1.6 | 未还 |
-| P1 | 第 1 期 第三节 | "'一半'和'2 倍'都是从定好的规则里算出来的，不是随口说的，后面几期会带你亲手算。" / "...in later episodes you'll work them out yourself, with nothing more than arithmetic." | 第 2 期（规则怎么变成数字）；第 3 期（一步一步往前算）。英文版多许了一条"只用算术"，第 1 圈不得出现微积分记号 | 未还 |
+| P0 | 第 1 期 结尾 | 思考题：关掉 C，A 和 B 会怎么变？B 会不会也正好升到 2？"下一期开头揭晓答案。" / "We'll reveal the answer at the start of the next episode." | 第 2 期冷开场：A = 2，B = 1.6 | 已还（第 2 期脚本 v0.3，待发布） |
+| P1 | 第 1 期 第三节 | "'一半'和'2 倍'都是从定好的规则里算出来的，不是随口说的，后面几期会带你亲手算。" / "...in later episodes you'll work them out yourself, with nothing more than arithmetic." | 第 2 期（规则怎么变成数字）；第 3 期（一步一步往前算）。英文版多许了一条"只用算术"，第 1 圈不得出现微积分记号 | 部分已还（第 2 期算了"一半"和"2 倍"；一步一步往前算见 P8） |
 | P2 | 第 1 期 第二节 | "关掉一个基因（实验室里有专门的工具做到这一点，后面会讲）" / "Labs have special tools for switching off genes, and we'll get to them later." | 第 3 圈 · CRISPR。间隔长：第 11 期复盘时重申 | 未还 |
 | P3 | 第 1 期 第四节 | "'差不多'不等于'一模一样'，这又带来新的难题，我们后面会专门讲。" / "...which we'll come back to in a later episode." | 第 7 期（一群细胞）首次专门讲；第 2 圈 · 批次效应加深 | 未还 |
-| P4 | 第 1 期 第三节 | "真实细胞不会降得这么干脆，这里是玩具的简化。" / "Real cells wouldn't drop this cleanly. That's a simplification in our toy." | 第 2 期结尾的"真实细胞里对应什么"先交代一句；第 3 圈 · 剂量与时间、CRISPR 讲透 | 未还 |
+| P4 | 第 1 期 第三节 | "真实细胞不会降得这么干脆，这里是玩具的简化。" / "Real cells wouldn't drop this cleanly. That's a simplification in our toy." | 第 2 期结尾的"真实细胞里对应什么"先交代一句；第 3 圈 · 剂量与时间、CRISPR 讲透 | 部分已还（第 2 期：没人推时真实基因还会漏出一点点，是原因之一） |
 | P5 | 第 1 期 第一节 | "药进了人体有没有疗效，更是另一回事。" / "...whether a drug actually works once it's inside a human body is a different question altogether." | 第 4 圈 · 从细胞到人 | 未还 |
 | P6 | 第 1 期 结尾 | "接下来的每一期，都会回答这台机器的一个部件。" / "Every episode from here on will take on one part of this machine." | 长期承诺：每期开头在地图上亮一格。费曼审核逐期检查 | 持续 |
+| P7 | 第 2 期 结尾 | 思考题："一个刚'开机'的玩具细胞，三根柱子都是 0。用今天的三个算式算一算：这一刻，哪根柱子在涨，哪根不动？下一期开头揭晓。" / "imagine a brand-new toy cell, just starting up, with all three bars at 0. Use today's three formulas: at that very moment, which bar is rising, and which ones aren't moving?" | 第 3 期冷开场：只有 A 在涨（生产速度 2 / 0 / 0），再接"A 先冲到约 1.58 又回落"。同期要回答两个新生（中英各一）都问到的："C 真能降到正好 0 吗？"——随时间是越来越接近；第 2 期说的"正好"是停下来的高度 | 未还 |
+| P8 | 第 2 期 第六节 | "另一个办法是：从某一刻出发，一小步一小步往前推，看柱子最后停在哪。这是下一期的事。"（P1 剩下的部分） | 第 3 期 | 未还 |
+| P9 | 第 2 期 第六节 | "那种药到底让 A 降多少，是不是正好一半，第 4 期再算。"（药 = A 开足马力减半，`scale={'A': 0.5}`） | 第 4 期：A 只降到约 0.72 | 未还 |
 
 ## 点到了、没展开
 
@@ -29,3 +32,6 @@
 | M3 | 第 1 期 第四节 | 人类细胞将近两万个能做出蛋白质的基因，大多数"谁推动谁、谁压住谁"还不知道 | 第 2 圈 · 调控网络 |
 | M4 | 第 1 期 第五节 | 实际研究里，两条路常混着用 | 第 3 圈收尾（一句话 v4） |
 | M5 | 第 1 期 第四节 | 天气预报的细节仍要近似处理 | 不展开（类比的边界，已说清） |
+| M6 | 第 2 期 第三节 | 浴缸类比的失效处：细胞里的蛋白是一个一个的，数量少时会忽多忽少，玩具先抹平了 | 第 3 圈 · 随机性 |
+| M7 | 第 2 期 第五、七节 | 不少真实基因测出来是先平、后陡、再平的形状；为什么是这个形状没讲（几个蛋白抱团才推得动） | 第 2 圈 · 调控网络 |
+| M8 | 第 2 期 第七节 | 算式里那几个数要靠实验测，真正细测过的只是极少数 | 第 2 圈 · 调控网络（与 M3 合并讲） |

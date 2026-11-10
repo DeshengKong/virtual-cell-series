@@ -103,7 +103,7 @@ concepts:
     kind: everyday
     introduced: 1
     said: 玩具的规则里，C 在正常水平时把 A 的生产压到一半；压力没了，A 的生产开足马力，稳定在原来的 2 倍。
-    note: 第 2 期把"一半"写成算式（欠账 P1）。
+    note: 第 2 期写成算式：压住系数 = 1 ÷ (1 + C×C)，C = 1 时一半。全系列"一半马力"只指系数是一半；把开足马力本身减半要说成"开足马力也只有原来的一半"（第 2 期加药、第 4 期）。
 
   - id: blueprint
     zh: 图纸
@@ -165,17 +165,30 @@ concepts:
     zh: 规则算式
     en: the rule as a formula
     kind: everyday
-    introduced: null
-    planned: 2
-    said: （计划）"压住"和"推动"各是一个算式；生产 = 最大产量 × 一个 0 到 1 之间的系数。
+    introduced: 2
+    said: 生产速度 = 开足马力的速度 2 × 一个 0 到 1 之间的系数。压住系数 = 1 ÷ (1 + C×C)；推动系数 = A×A ÷ (1 + A×A)。分解速度 = 现有的量（比例设成 1），所以停下来的高度 = 生产速度。
+    analogy: 浴缸（水龙头是生产，排水口是分解；水越多流得越快，进出一样快时水位停住）
+    fails: 浴缸的水连成一片，水位平稳；细胞里的蛋白是一个一个的分子，数量少时忽多忽少。玩具先把这一点抹平（promises.md M6）。
+    note: 第 2 期说"压住系数""推动系数"（跟着 C、A 变，是算出来的），不出现 k、n。"推到一半要的量是 1"= k，"乘几次，也就是坡有多陡"= n；这几个数和开足马力的 2 才是"设定的、真实细胞里要测的"。"此刻的快慢"用车速表举例，失效处：车速是司机踩的，分解速度由柱子高度决定。
+    en_terms: 压住系数 = hold-back factor；推动系数 = push factor；分子/分母 = the top / the bottom (of the fraction)；比例 = that (breakdown) number；单位时间 = unit of time（"the toy's clock"，不说 minute）。
+
+  - id: loop
+    zh: 环
+    en: loop
+    kind: everyday
+    introduced: 2
+    said: A 推 B，B 推 C，C 又绕回来压 A，三条规则首尾相连，绕成一个环。C 变成 0 时环断开，可以顺着一路算；环不断时，A 一变，B、C 都会跟着变，又绕回来影响 A。
+    note: 第 4 期"反馈"的前身。
 
   - id: saturation
     zh: 饱和
     en: saturation
     kind: term
-    introduced: null
-    planned: 2
-    said: （计划）推动有上限：推的再多，生产也到不了最大产量。关掉 C 后 B 只到 1.6 就是因为这个。
+    introduced: 2
+    said: 越推越不划算：越靠近顶，多推一份换来的越少；在我们的算式里，推得再多也只能贴近，碰不到。推动系数的分母永远比分子多 1。关掉 C 后 A 是 2，推动系数 0.8，B 只到 1.6。压住只要 C 真的降到 0，系数正好是 1，够得着上限。
+    analogy: 饱和溶液
+    fails: 饱和溶液是真的到了顶、再加也溶不进去；这里是一点点贴近顶，永远差一点。共同点是越往后多加一份越不起作用。
+    note: 真实基因的推动也贴着平顶走（第 2 期 facts.md #4）。
 
   - id: step-forward
     zh: 一步一步往前算

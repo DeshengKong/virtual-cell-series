@@ -1,0 +1,34 @@
+episode: 2
+slug: how-the-2-is-calculated
+title:
+  zh: 那个"2"是怎么算出来的
+  en: Where Does That "2" Come From?
+type: core
+map: [3]              # ③ 这台机器从哪里来（机器里的规则）
+prerequisites: [1]
+# 概念账（docs/concepts.yml 的 id）。tools/check_prereq.py 检查：uses 必须在更早的期数引入过，或在本期 introduces 里
+introduces: [rule-formula, saturation, loop]
+uses: [toy-cell, cell-state, perturbation, push, hold-back, switch-off-gene, balance, full-power, four-question-map, virtual-cell, protein, gene, arithmetic]
+promises_paid: [P0, P1]      # P1 部分：一步一步往前算在第 3 期
+promises_partial: [P4]
+promises_new: [P7, P8, P9]
+mentions_new: [M6, M7, M8]
+question:
+  zh: 规则怎么变成数字？
+  en: How do rules turn into numbers?
+takeaway:
+  zh: 柱子停在生产和分解打平的地方；推动会饱和，推得再多也到不了顶。
+  en: A bar stops where production and breakdown balance out; pushing saturates, and no amount of pushing reaches the top.
+status: published  # 2026-11-10 中文 B 站、英文 YouTube
+published: 2026-11-10   # 首次公开的日期；发布后第 14 天复盘按它算
+release:
+  zh: https://www.bilibili.com/video/BV1PjW36vEHw  # 2026-11-10 投稿
+  en: https://youtu.be/HeJvfHhY06s  # 2026-11-10 公开
+voice:
+  name: Charon
+  tool: gemini-voice-mcp synthesize_speech
+  style_zh: 用耐心、清晰、温和的大学老师语气朗读，语速适中，讲到关键句时稍微放慢。英文术语按英语原本的读法念。
+  style_en: Read in a patient, clear, warm university-lecturer tone at a moderate pace, slowing slightly on key sentences.
+  generated: 2026-11-10
+  service_version: 未记录（与第 1 期同一服务；Cloud Run 修订号工具结果里不返回）
+duration_s: {zh: 704.7, en: 823.2}   # 含两处 2 秒停顿；不含片尾 1.5 秒

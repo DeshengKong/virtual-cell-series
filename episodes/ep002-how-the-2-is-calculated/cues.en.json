@@ -1,0 +1,914 @@
+{
+ "sections": [
+  [
+   0.0,
+   52.72
+  ],
+  [
+   53.52,
+   79.48
+  ],
+  [
+   80.28,
+   225.84
+  ],
+  [
+   226.64,
+   334.84
+  ],
+  [
+   335.64,
+   546.32
+  ],
+  [
+   547.12,
+   711.04
+  ],
+  [
+   711.84,
+   822.36
+  ]
+ ],
+ "subs": [
+  [
+   0.0,
+   9.52,
+   "Our toy cell has only three genes: A pushes up B, B pushes up C, and C holds back A."
+  ],
+  [
+   10.18,
+   14.74,
+   "Under each gene is a bar showing how much of its protein there is."
+  ],
+  [
+   15.78,
+   24.16,
+   "Last time I left you a question: what if we switch off C instead of B, so the cell stops making protein C?"
+  ],
+  [
+   24.7,
+   26.2,
+   "What happens to A and B?"
+  ],
+  [
+   27.4,
+   30.56,
+   "Here's the answer: C falls to 0."
+  ],
+  [
+   31.34,
+   34.48,
+   "A rises to 2, just like when we switched off B."
+  ],
+  [
+   35.32,
+   37.92,
+   "B rises too, but not to 2."
+  ],
+  [
+   38.42,
+   40.56,
+   "It stops at 1.6."
+  ],
+  [
+   41.62,
+   43.84,
+   "Why exactly 1.6?"
+  ],
+  [
+   44.44,
+   47.4,
+   "Why does A reach 2, while B doesn't?"
+  ],
+  [
+   48.04,
+   52.34,
+   "In this episode, we'll work it out ourselves, using nothing but arithmetic."
+  ],
+  [
+   53.52,
+   59.64,
+   "At the end of Episode 1, there were four boxes around this machine, and I didn't read them out."
+  ],
+  [
+   60.34,
+   66.02,
+   "They're the four big questions about a virtual cell: how do we describe a cell's state"
+  ],
+  [
+   66.84,
+   68.26,
+   "what can we do to a cell"
+  ],
+  [
+   69.0,
+   70.34,
+   "how do we build the machine"
+  ],
+  [
+   70.98,
+   72.88,
+   "and how do we test whether it's right."
+  ],
+  [
+   73.8,
+   79.16,
+   "Today is box three: how the few rules inside the machine turn into numbers."
+  ],
+  [
+   80.28,
+   82.46,
+   "Let's start with a single bar."
+  ],
+  [
+   83.08,
+   88.32,
+   "Remember from Episode 1: a cell keeps making proteins, and it also keeps breaking them down."
+  ],
+  [
+   89.02,
+   90.4,
+   "It's a lot like a bathtub."
+  ],
+  [
+   91.2,
+   93.42,
+   "The tap pouring water in is production."
+  ],
+  [
+   94.0,
+   96.06,
+   "The drain letting water out is breakdown."
+  ],
+  [
+   97.08,
+   98.08,
+   "How fast is breakdown?"
+  ],
+  [
+   99.16,
+   105.96,
+   "Think about it this way: over a short stretch of time, each protein has roughly the same chance of being broken down by the cell."
+  ],
+  [
+   106.56,
+   111.88,
+   "So if there are twice as many proteins, twice as many get broken down in the same stretch of time."
+  ],
+  [
+   112.7,
+   115.76,
+   "In other words, twice as much means twice as fast."
+  ],
+  [
+   116.7,
+   121.38,
+   "That's how we set up the toy, and in real cells, many proteins behave roughly like this."
+  ],
+  [
+   122.28,
+   126.38,
+   "In our toy, breakdown speed is simply the amount right now, times 1."
+  ],
+  [
+   127.66,
+   131.28,
+   "If the bar is at 1, right now it's losing 1 per unit of time"
+  ],
+  [
+   131.76,
+   132.84,
+   "at 2, it's losing 2."
+  ],
+  [
+   134.04,
+   135.9,
+   "The unit of time is just the toy's clock."
+  ],
+  [
+   136.2,
+   139.36,
+   "It doesn't match any number of minutes or hours in a real cell."
+  ],
+  [
+   140.36,
+   144.02,
+   "The rule is simple: if more comes in than goes out, the bar rises"
+  ],
+  [
+   144.74,
+   145.98,
+   "if less, it falls"
+  ],
+  [
+   146.64,
+   148.14,
+   "if they're equal, it stops."
+  ],
+  [
+   149.26,
+   151.46,
+   "Turn on the tap, and the bar starts to rise."
+  ],
+  [
+   152.2,
+   154.72,
+   "The higher it gets, the faster water flows out."
+  ],
+  [
+   155.32,
+   159.32,
+   "It keeps rising until out matches in, and then the bar stops."
+  ],
+  [
+   160.42,
+   162.8,
+   "That's what Episode 1 meant by \"balance out\"."
+  ],
+  [
+   163.92,
+   169.74,
+   "One careful point: \"losing 1 per unit of time\" is how fast it's going right now."
+  ],
+  [
+   170.02,
+   173.18,
+   "It doesn't mean the bar is empty after one unit of time."
+  ],
+  [
+   173.74,
+   179.78,
+   "It's like a speedometer reading 60: that doesn't necessarily mean you'll cover 60 miles in the next hour."
+  ],
+  [
+   180.46,
+   182.5,
+   "A car's speed is controlled by the driver."
+  ],
+  [
+   183.24,
+   190.62,
+   "Here, though, breakdown speed depends on the bar's own height: as the bar drops, breakdown slows down with it."
+  ],
+  [
+   191.28,
+   196.89,
+   "Since breakdown is just the height times 1, a bar stops at a height equal to its production speed."
+  ],
+  [
+   196.94,
+   200.06,
+   "Make 1 per unit of time, and the bar stops at 1"
+  ],
+  [
+   200.8,
+   202.42,
+   "make 2, and it stops at 2."
+  ],
+  [
+   203.64,
+   207.8,
+   "So to find where a bar stops, all we need is how fast it's being made."
+  ],
+  [
+   209.14,
+   211.64,
+   "There's one way the bathtub isn't like a cell."
+  ],
+  [
+   212.32,
+   216.68,
+   "Water flows as one continuous body, so the level is smooth and steady."
+  ],
+  [
+   217.42,
+   223.58,
+   "Proteins are separate pieces you could count one by one, and when there are only a few, their number jumps around."
+  ],
+  [
+   224.16,
+   225.62,
+   "Our toy ignores that for now."
+  ],
+  [
+   226.64,
+   229.42,
+   "So what decides how fast production is?"
+  ],
+  [
+   230.04,
+   231.12,
+   "The rules do."
+  ],
+  [
+   231.68,
+   234.14,
+   "Start with A: C holds back A."
+  ],
+  [
+   235.18,
+   241.46,
+   "Here's how the rule is written: A's production speed equals 2, times a \"hold-back factor\"."
+  ],
+  [
+   242.4,
+   246.98,
+   "2 is how fast A is made at full power: 2 per unit of time."
+  ],
+  [
+   247.88,
+   250.74,
+   "The hold-back factor is a number between 0 and 1."
+  ],
+  [
+   251.18,
+   257.0,
+   "It says how much of that power is left right now: the harder A is held back, the smaller it gets."
+  ],
+  [
+   258.34,
+   260.06,
+   "The hold-back factor is a fraction."
+  ],
+  [
+   260.7,
+   261.66,
+   "The top is 1."
+  ],
+  [
+   262.06,
+   264.82,
+   "The bottom is 1 plus C times C."
+  ],
+  [
+   265.62,
+   266.66,
+   "Let's try a few numbers."
+  ],
+  [
+   267.18,
+   273.04,
+   "If C is 0, nothing holds A back: the bottom is 1, the factor is 1, full power."
+  ],
+  [
+   274.0,
+   277.8,
+   "If C is 1, the bottom is 2, and the factor is one half."
+  ],
+  [
+   278.68,
+   279.98,
+   "What about when C is 2?"
+  ],
+  [
+   280.62,
+   281.84,
+   "Work it out yourself first."
+  ],
+  [
+   285.56,
+   293.14,
+   "The bottom is 1 plus 4, which is 5, so the factor is one fifth: only a fifth of the power is left."
+  ],
+  [
+   293.64,
+   296.44,
+   "The more C there is, the harder it holds A back."
+  ],
+  [
+   297.82,
+   303.96,
+   "In Episode 1, I said that C at its normal level cuts A's production in half, down to \"half power\"."
+  ],
+  [
+   304.82,
+   313.84,
+   "That half comes right from here: normally C is 1, the factor is one half, so A's production speed is 2 times a half, which is 1."
+  ],
+  [
+   314.38,
+   316.12,
+   "That's why A stops at 1."
+  ],
+  [
+   316.96,
+   319.04,
+   "Switch off C, and C falls to 0."
+  ],
+  [
+   319.46,
+   325.36,
+   "The factor becomes 1, A's production speed is 2 times 1, which is 2, and A stops at 2."
+  ],
+  [
+   325.96,
+   328.96,
+   "Episode 1's \"twice\" is just 2 compared with 1."
+  ],
+  [
+   329.66,
+   334.62,
+   "When we switched off B, C also fell to 0, so A stopped at 2 that time too."
+  ],
+  [
+   335.64,
+   339.78,
+   "Now B: A pushes up B."
+  ],
+  [
+   340.26,
+   344.8,
+   "B's production speed equals 2, times a \"push factor\"."
+  ],
+  [
+   345.54,
+   347.0,
+   "The push factor is a fraction too."
+  ],
+  [
+   347.98,
+   349.54,
+   "The top is A times A."
+  ],
+  [
+   349.8,
+   352.5,
+   "The bottom is 1 plus A times A."
+  ],
+  [
+   353.4,
+   354.52,
+   "Let's try numbers again."
+  ],
+  [
+   355.0,
+   358.66,
+   "If A is 0, the top is 0, the factor is 0."
+  ],
+  [
+   359.1,
+   361.48,
+   "Nothing pushes, and B isn't made at all."
+  ],
+  [
+   362.2,
+   367.32,
+   "If A is 1, it's one half: when A reaches 1, it pushes exactly halfway."
+  ],
+  [
+   367.94,
+   373.7,
+   "If A is 2, the top is 4 and the bottom is 5: four fifths, or 0.8."
+  ],
+  [
+   374.5,
+   382.0,
+   "After we switch off C, A is 2, so B's production speed is 2 times 0.8, which is 1.6."
+  ],
+  [
+   382.42,
+   384.14,
+   "B stops at 1.6."
+  ],
+  [
+   384.56,
+   387.8,
+   "That's the answer to last episode's question, worked out by hand."
+  ],
+  [
+   388.54,
+   390.44,
+   "What if there were more A?"
+  ],
+  [
+   391.04,
+   395.34,
+   "In the toy, A never goes above 2, because its factor is at most 1."
+  ],
+  [
+   395.88,
+   401.9,
+   "So let's suppose we pour extra A protein into the cell from outside, and just use the formula to calculate."
+  ],
+  [
+   402.56,
+   408.04,
+   "Take a guess first: how big does A have to be for B to reach exactly 2?"
+  ],
+  [
+   411.22,
+   416.08,
+   "Going from A = 2 to 3, B gains 0.2 and reaches 1.8."
+  ],
+  [
+   416.58,
+   418.96,
+   "Going to 4, it gains less than 0.1."
+  ],
+  [
+   419.4,
+   423.0,
+   "Even at A = 10, B is only 1.98."
+  ],
+  [
+   423.88,
+   426.84,
+   "Closer and closer, but it never reaches 2."
+  ],
+  [
+   427.66,
+   432.16,
+   "The reason is right there in the formula: the bottom is always 1 more than the top."
+  ],
+  [
+   432.52,
+   436.76,
+   "So no matter how big A gets, the push factor is always less than 1."
+  ],
+  [
+   437.24,
+   439.7,
+   "A bigger A only brings it closer to 1."
+  ],
+  [
+   440.0,
+   443.34,
+   "So B's production speed always stays below 2."
+  ],
+  [
+   444.22,
+   448.74,
+   "The closer you get to the top, the less each extra bit of push adds."
+  ],
+  [
+   449.46,
+   453.42,
+   "In our formula, however hard you push, you only get closer"
+  ],
+  [
+   453.9,
+   455.24,
+   "you never touch it."
+  ],
+  [
+   455.76,
+   457.6,
+   "Scientists call this \"saturation\"."
+  ],
+  [
+   458.32,
+   463.68,
+   "In chemistry, a saturated solution really has hit the top: add more, and it won't dissolve."
+  ],
+  [
+   464.38,
+   470.44,
+   "Here, saturation means getting closer and closer to the top, and always falling just short."
+  ],
+  [
+   471.18,
+   475.42,
+   "What they have in common: the further you go, the less each extra bit does."
+  ],
+  [
+   476.3,
+   478.54,
+   "Now we can answer the question from the start."
+  ],
+  [
+   479.32,
+   483.02,
+   "Holding back and pushing share the same ceiling: full power, 2."
+  ],
+  [
+   483.6,
+   485.58,
+   "The difference is whether you can reach it."
+  ],
+  [
+   486.1,
+   493.2,
+   "With holding back, once C really falls to 0, the factor is exactly 1, and A gets exactly to 2."
+  ],
+  [
+   493.64,
+   497.08,
+   "With pushing, you'd need infinitely much A to reach it."
+  ],
+  [
+   497.58,
+   502.86,
+   "With A at 2, the factor is only 0.8, so B stops at 1.6."
+  ],
+  [
+   503.64,
+   507.02,
+   "You might ask: why A times A, and not just A?"
+  ],
+  [
+   507.86,
+   508.66,
+   "Let's compare."
+  ],
+  [
+   508.94,
+   514.58,
+   "With A alone, the factor is one third when A is 0.5, and two thirds when A is 2."
+  ],
+  [
+   515.2,
+   519.26,
+   "Multiply A by itself, and those become 0.2 and 0.8."
+  ],
+  [
+   520.14,
+   526.06,
+   "That makes small amounts count for less and large amounts count for more, so the push acts more like a switch."
+  ],
+  [
+   526.66,
+   528.36,
+   "But it isn't a real switch."
+  ],
+  [
+   528.84,
+   530.08,
+   "It doesn't jump all at once"
+  ],
+  [
+   530.4,
+   531.56,
+   "it's a very steep slope."
+  ],
+  [
+   532.4,
+   535.54,
+   "The C times C on the hold-back side works the same way."
+  ],
+  [
+   536.26,
+   537.64,
+   "We chose these two formulas."
+  ],
+  [
+   538.34,
+   546.0,
+   "We chose them because quite a few real genes, when measured, show this same shape: flat, then steep, then flat again."
+  ],
+  [
+   547.12,
+   558.3,
+   "C's rule works just like B's: B pushes up C, so C's production speed is 2 times a push factor, only this time the factor uses B."
+  ],
+  [
+   559.14,
+   567.74,
+   "A pushes B, B pushes C, and C comes back to hold back A: the three rules join end to end into a loop."
+  ],
+  [
+   568.8,
+   571.8,
+   "Now let's go back to those three 1s from the normal state."
+  ],
+  [
+   572.64,
+   575.95,
+   "Put in A, B and C all equal to 1."
+  ],
+  [
+   576.0,
+   580.14,
+   "A's production speed: 2 times a half, which is 1."
+  ],
+  [
+   580.76,
+   582.96,
+   "B's: 2 times a half, 1."
+  ],
+  [
+   583.62,
+   584.96,
+   "C's: also 1."
+  ],
+  [
+   585.74,
+   595.6,
+   "All three bars are being made at speed 1, exactly matching their current heights, so every bar's production and breakdown balance out here, all at the same time."
+  ],
+  [
+   596.36,
+   599.6,
+   "That's why, normally, all three bars stop at 1."
+  ],
+  [
+   600.34,
+   603.4100000000001,
+   "In Episode 1, I said we'd \"call that height 1\"."
+  ],
+  [
+   603.46,
+   605.48,
+   "Actually, we did it backwards."
+  ],
+  [
+   605.86,
+   612.24,
+   "We chose the numbers in the rules first: full power is 2, and the amount that pushes halfway is 1."
+  ],
+  [
+   612.9,
+   615.82,
+   "We chose them so the answer comes out exactly 1."
+  ],
+  [
+   616.34,
+   617.94,
+   "That keeps the arithmetic easy."
+  ],
+  [
+   618.9,
+   624.58,
+   "Switching off C is the same as changing the \"2\" in C's rule to 0: no more production."
+  ],
+  [
+   625.46,
+   631.24,
+   "The new state the machine is looking for is where, under the changed rules, every bar balances out again."
+  ],
+  [
+   631.86,
+   634.44,
+   "C has no production, so it falls to 0."
+  ],
+  [
+   634.84,
+   637.1,
+   "With C at 0, A stops at 2."
+  ],
+  [
+   637.38,
+   640.2,
+   "With A at 2, B stops at 1.6."
+  ],
+  [
+   641.24,
+   643.24,
+   "A drug works the same way."
+  ],
+  [
+   643.84,
+   647.1,
+   "Suppose a drug cuts A's full power in half."
+  ],
+  [
+   647.76,
+   651.04,
+   "That's changing the 2 in A's rule to 1."
+  ],
+  [
+   652.2,
+   664.46,
+   "That's what this episode adds to the machine: a perturbation, like switching off a gene or adding a drug, changes the rules, and the new state is where every bar balances out again."
+  ],
+  [
+   665.34,
+   673.58,
+   "But let's be clear: this time we could calculate one step after another because C went to 0, and that cut the loop open."
+  ],
+  [
+   674.16,
+   682.12,
+   "If the loop isn't cut, like with that drug, then when A changes, B and C change too, and that comes back to affect A."
+  ],
+  [
+   682.64,
+   685.04,
+   "You can't just calculate one step after another."
+  ],
+  [
+   685.6,
+   695.28,
+   "You could treat the three formulas as a set of equations and solve them together, but they're not the simple straight-line equations from school, and solving them is hard work."
+  ],
+  [
+   696.02,
+   702.62,
+   "Another way: start from some moment, and step forward a little at a time, to see where the bars end up."
+  ],
+  [
+   702.98,
+   703.96,
+   "That's next episode."
+  ],
+  [
+   704.72,
+   710.32,
+   "Exactly how much that drug lowers A, and whether it's exactly half, we'll work out in Episode 4."
+  ],
+  [
+   711.84,
+   713.68,
+   "Do real cells work like this?"
+  ],
+  [
+   714.22,
+   715.2,
+   "Some parts do."
+  ],
+  [
+   715.7,
+   716.8900000000001,
+   "In the bacterium E."
+  ],
+  [
+   716.94,
+   728.2,
+   "coli, scientists took the stretch of DNA that controls how hard a gene works, and connected it to a protein that glows green: the faster the gene works, the faster the cell lights up."
+  ],
+  [
+   728.94,
+   731.94,
+   "Then they added a small molecule that gets this gene going."
+  ],
+  [
+   732.5,
+   739.14,
+   "The more they added, the faster the gene made its product, until it barely rose any more, staying flat at the top."
+  ],
+  [
+   739.82,
+   745.12,
+   "That curve is flat, then steep, then flat too, the same shape as the formulas we chose."
+  ],
+  [
+   746.08,
+   747.74,
+   "But there are differences too."
+  ],
+  [
+   748.44,
+   752.36,
+   "In our formulas, when nothing pushes, the factor is exactly 0."
+  ],
+  [
+   753.38,
+   760.02,
+   "That's why in Episode 1, after we switched off B, C had nothing pushing it and fell cleanly, all the way to 0."
+  ],
+  [
+   761.52,
+   765.2700000000001,
+   "A real gene with nothing pushing it often isn't completely shut off."
+  ],
+  [
+   765.32,
+   767.18,
+   "A little still leaks out."
+  ],
+  [
+   767.68,
+   772.6,
+   "When Episode 1 said \"real cells wouldn't drop this cleanly\", this is one of the reasons."
+  ],
+  [
+   773.64,
+   785.36,
+   "And in real cells, the numbers in these formulas aren't set by anyone: what full power is, how much it takes to push halfway, and how many times you multiply, which decides how steep the slope is."
+  ],
+  [
+   786.06,
+   790.9300000000001,
+   "They have to be measured in experiments, and only a tiny fraction have been measured carefully."
+  ],
+  [
+   790.98,
+   795.42,
+   "If you remember one sentence from this episode, make it this:"
+  ],
+  [
+   796.2,
+   799.86,
+   "A bar stops where production and breakdown balance out"
+  ],
+  [
+   800.3,
+   803.7,
+   "pushing saturates, and no amount of pushing reaches the top."
+  ],
+  [
+   804.8,
+   811.58,
+   "Here's a question to think about: imagine a brand-new toy cell, just starting up, with all three bars at 0."
+  ],
+  [
+   812.76,
+   818.86,
+   "Use today's three formulas: at that very moment, which bar is rising, and which ones aren't moving?"
+  ],
+  [
+   819.56,
+   822.02,
+   "We'll reveal the answer at the start of the next episode."
+  ]
+ ]
+}

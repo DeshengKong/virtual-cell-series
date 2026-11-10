@@ -44,9 +44,12 @@ design/      共享画面组件（第 3 期后从各期代码里抽出来）
 
 ## 已发布
 
+YouTube 播放列表（按顺序看）：https://www.youtube.com/playlist?list=PLW1P6tnKxvAc
+
 | 期 | 标题 | 地图位置 | 视频 |
 |---|---|---|---|
 | 1 | [什么是虚拟细胞](episodes/ep001-what-is-a-virtual-cell/) / What Is a Virtual Cell? | 序章 | [B 站（中文）](https://www.bilibili.com/video/BV1k3W86SEYT) · [YouTube（English）](https://youtu.be/ANYJK46OmbQ) |
+| 2 | [那个"2"是怎么算出来的](episodes/ep002-how-the-2-is-calculated/) / Where Does That "2" Come From? | ③ 机器里的规则 | [B 站（中文）](https://www.bilibili.com/video/BV1PjW36vEHw) · [YouTube（English）](https://youtu.be/HeJvfHhY06s) |
 
 ## 纠错与建议
 

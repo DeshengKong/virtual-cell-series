@@ -1,0 +1,576 @@
+<!doctype html>
+<html><head><meta charset="utf-8">
+<style>
+  html,body{margin:0;background:#0E161D}
+  #stage{width:1920px;height:1080px;position:relative;overflow:hidden;background:#0E161D}
+  svg{position:absolute;inset:0}
+  text{font-family:"Noto Sans CJK SC","PingFang SC",sans-serif}
+  .mono{font-family:"SF Mono",Menlo,monospace}
+</style>
+<script src="data.js"></script>
+</head><body>
+<div id="stage"><svg id="svg" width="1920" height="1080" viewBox="0 0 1920 1080"></svg></div>
+<script>
+/* ---------- 全系列配色：一个颜色只有一个意思 ---------- */
+const C = {
+  bg:'#0E161D', card:'#16212a', edge:'#2c3a45',
+  steel:'#8FB3C8',          // 正常、基线、柱子
+  gold:'#F0B429',           // 临时焦点
+  push:'#4fa3ef',           // 推动（激活）
+  press:'#e4572e',          // 压住（抑制）
+  hand:'#a78bfa',           // 人为干预（扰动）
+  off:'#4a5863',            // 被关掉
+  t1:'#F2F5F7', t2:'#cfd8de', t3:'#8a96a0', eb:'#7f8b95'
+};
+let STR = {}, SUBS = [], SEC = [], ANCH = [];   // 由 render.py 注入：文字、字幕、各节起止、各节每行旁白的起点（节内秒）
+const clamp=(x,a=0,b=1)=>Math.max(a,Math.min(b,x));
+const CJK=s=>/[\u4e00-\u9fff]/.test(s);
+// 西文长句按单词折成多行（中文不走这里，保持原样）
+function wrapLatin(s,n){const L=[];let l='';for(const w of s.split(' ')){if(l&&(l+' '+w).length>n){L.push(l);l=w;}else l=l?l+' '+w:w;}if(l)L.push(l);return L;}
+const ease=x=>1-Math.pow(1-clamp(x),3);
+const io=x=>{x=clamp(x);return x<.5?4*x*x*x:1-Math.pow(-2*x+2,3)/2};
+const ramp=(t,a,b)=>clamp((t-a)/(b-a));
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+function T(x,y,s,{size=32,fill=C.t1,w=500,anchor='start',op=1,mono=false,ls=0}={}){
+  return `<text x="${x}" y="${y}" font-size="${size}" fill="${fill}" font-weight="${w}" text-anchor="${anchor}" opacity="${op}" ${mono?'class="mono"':''} letter-spacing="${ls}">${esc(s)}</text>`;
+}
+function R(x,y,w,h,{fill=C.card,stroke=C.edge,sw=2,r=14,op=1,dash=''}={}){
+  return `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="${r}" fill="${fill}" stroke="${stroke}" stroke-width="${sw}" opacity="${op}" ${dash?`stroke-dasharray="${dash}"`:''}/>`;
+}
+function sim(name,tt){const s=SIM[name];const i=clamp(tt/s.dt,0,s.x.length-1);const a=Math.floor(i),b=Math.min(a+1,s.x.length-1),f=i-a;return s.x[a].map((v,k)=>v+(s.x[b][k]-v)*f);}
+
+/* ---------- 常驻元素 ---------- */
+function chrome(t,title,titleOp=1){
+  let s=T(96,84,STR.eyebrow,{size:24,fill:C.eb,mono:true,ls:3});
+  s+=T(1824,84,STR.schematic,{size:24,fill:C.eb,anchor:'end'});
+  if(title) s+=T(96,168,title,{size:58,w:900,op:titleOp});
+  const total=SEC[SEC.length-1][1];
+  s+=`<rect x="0" y="1074" width="${1920*clamp(t/total)}" height="6" fill="${C.steel}"/>`;
+  return s;
+}
+function subtitle(t){
+  const cur=SUBS.find(x=>t>=x[0]&&t<x[1]); if(!cur) return '';
+  const txt=cur[2];
+  if(!/[\u4e00-\u9fff]/.test(txt)){ // 西文：按单词折行，每行 ≤ 64 字符；超过两行则按字数比例分页显示
+    const nL=Math.ceil(txt.length/64), lines=wrapLatin(txt,Math.min(64,Math.ceil(txt.length/nL)+6)); // 行长均衡，避免单词落单
+    const pages=[]; for(let i=0;i<lines.length;i+=2) pages.push(lines.slice(i,i+2));
+    const tot=txt.length, el=(t-cur[0])/(cur[1]-cur[0])*tot; let acc=0,pg=pages[pages.length-1];
+    for(const P of pages){acc+=P.join(' ').length+1; if(el<acc){pg=P;break;}}
+    if(pg.length===1) return T(960,1000,pg[0],{size:40,anchor:'middle'});
+    return T(960,972,pg[0],{size:40,anchor:'middle'})+T(960,1030,pg[1],{size:40,anchor:'middle'});
+  }
+  if(txt.length<=30) return T(960,1000,txt,{size:42,anchor:'middle'});
+  const mid=txt.length/2; let cut=-1,best=1e9;
+  for(let i=0;i<txt.length;i++) if('，、：；'.includes(txt[i])&&Math.abs(i-mid)<best){best=Math.abs(i-mid);cut=i+1;}
+  if(cut<0) cut=Math.ceil(mid);
+  return T(960,972,txt.slice(0,cut),{size:42,anchor:'middle'})+T(960,1030,txt.slice(cut),{size:42,anchor:'middle'});
+}
+
+/* ---------- 组件：输入—输出机器 ---------- */
+function machine(cx,cy,{p=1,rules=0,inState=null,inPert=null,out=null,labels=true}={}){
+  let s='';
+  const w=360,h=230;
+  s+=R(cx-w/2,cy-h/2,w,h,{fill:'#1b2833',stroke:C.steel,sw:3,r:22,op:ease(p)});
+  s+=T(cx,cy-h/2+52,STR.machine,{size:40,w:900,anchor:'middle',op:ease(p)});
+  if(rules>0){ // 机器内部亮出三条规则
+    const o=ease(rules), y=cy+30;
+    s+=`<g opacity="${o}">`+miniNet(cx,y,0.62)+`</g>`;
+    s+=T(cx,cy+h/2-14,STR.rules_inside,{size:24,fill:C.gold,anchor:'middle',op:o});
+  }
+  if(labels){
+    const lp=ease(p*1.4-0.2);
+    // 左侧两入口
+    s+=arrow(cx-w/2-230,cy-60,cx-w/2-10,cy-60,C.steel,lp);
+    s+=arrow(cx-w/2-230,cy+60,cx-w/2-10,cy+60,C.hand,lp);
+    s+=T(cx-w/2-240,cy-72,STR.in_state,{size:30,anchor:'end',op:lp});
+    s+=T(cx-w/2-240,cy+70,STR.in_pert,{size:30,anchor:'end',fill:C.hand,op:lp});
+    s+=arrow(cx+w/2+10,cy,cx+w/2+230,cy,C.steel,lp);
+    s+=T(cx+w/2+240,cy+10,STR.out_state,{size:30,op:lp});
+  }
+  if(inState) s+=bars3(cx-w/2-330,cy-110,inState,{scale:40,gap:44,bw:30,op:1,labels:false});
+  if(out) s+=bars3(cx+w/2+300,cy-30,out,{scale:40,gap:44,bw:30,op:1,labels:false});
+  return s;
+}
+function arrow(x1,y1,x2,y2,col,op=1,sw=4){
+  const a=Math.atan2(y2-y1,x2-x1),L=16;
+  const p1=[x2-L*Math.cos(a-0.45),y2-L*Math.sin(a-0.45)],p2=[x2-L*Math.cos(a+0.45),y2-L*Math.sin(a+0.45)];
+  return `<g opacity="${op}"><line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${col}" stroke-width="${sw}" stroke-linecap="round"/><path d="M${p1} L${x2},${y2} L${p2}" fill="none" stroke="${col}" stroke-width="${sw}" stroke-linejoin="round" stroke-linecap="round"/></g>`;
+}
+function tbar(x1,y1,x2,y2,col,op=1,sw=4){ // 丁字头 ⊣
+  const a=Math.atan2(y2-y1,x2-x1),L=16,nx=-Math.sin(a),ny=Math.cos(a);
+  return `<g opacity="${op}"><line x1="${x1}" y1="${y1}" x2="${x2}" y2="${y2}" stroke="${col}" stroke-width="${sw}" stroke-linecap="round"/><line x1="${x2+nx*L}" y1="${y2+ny*L}" x2="${x2-nx*L}" y2="${y2-ny*L}" stroke="${col}" stroke-width="${sw+1}" stroke-linecap="round"/></g>`;
+}
+
+/* ---------- 组件：玩具细胞网络 ---------- */
+const NODE={A:[0,0],B:[1,0],C:[2,0]};
+function net(ox,oy,sp,{op=1,showA=1,showB=1,showC=1,arAB=1,arBC=1,arCA=1,off={},r=46,font=40,pressOp=1}={}){
+  let s='';
+  const P=k=>[ox+NODE[k][0]*sp,oy];
+  const [ax,ay]=P('A'),[bx,by]=P('B'),[cx,cy]=P('C');
+  if(arAB>0) s+=arrow(ax+r+8,ay,ax+(bx-ax-2*r-16)*ease(arAB)+r+8,by,C.push,op*Math.min(1,arAB*3));
+  if(arBC>0) s+=arrow(bx+r+8,by,bx+(cx-bx-2*r-16)*ease(arBC)+r+8,cy,(off.B||off.C)?C.off:C.push,op*Math.min(1,arBC*3));
+  if(arCA>0){ // 从 C 上方绕回 A
+    const k=ease(arCA), top=ay-150;
+    const d=`M${cx},${cy-r-8} C${cx},${top} ${ax},${top} ${ax},${ay-r-24}`;
+    s+=`<path d="${d}" fill="none" stroke="${off.C?C.off:C.press}" stroke-width="4" stroke-linecap="round" pathLength="1" stroke-dasharray="1" stroke-dashoffset="${1-k}" opacity="${op*pressOp}"/>`;
+    if(k>0.95) s+=`<line x1="${ax-18}" y1="${ay-r-24}" x2="${ax+18}" y2="${ay-r-24}" stroke="${off.C?C.off:C.press}" stroke-width="5" stroke-linecap="round" opacity="${op*pressOp}"/>`;
+  }
+  for(const [k,sh] of [['A',showA],['B',showB],['C',showC]]){
+    if(sh<=0) continue;
+    const [x,y]=P(k), isOff=off[k]||0;
+    const col=isOff>0.5?C.off:C.t1;
+    s+=`<circle cx="${x}" cy="${y}" r="${r*ease(sh)}" fill="#1b2833" stroke="${isOff>0.5?C.off:C.steel}" stroke-width="3" opacity="${op}"/>`;
+    s+=T(x,y+font*0.36,k,{size:font,w:900,anchor:'middle',fill:col,op:op*ease(sh)});
+  }
+  return s;
+}
+function miniNet(cx,cy,sc){
+  return `<g transform="translate(${cx-120*sc*2},${cy}) scale(${sc})">`+net(0,40,240,{r:40,font:34})+`</g>`;
+}
+/* 柱子：值 → 高度；幽灵虚线 = 之前 */
+function bars3(x0,yBase,vals,{scale=120,gap=240,bw=90,op=1,ghost=null,labels=true,offK={},hl=null,nolab={}}={}){
+  let s='';
+  vals.forEach((v,i)=>{
+    const x=x0+i*gap-bw/2, h=Math.max(0,v)*scale, k='ABC'[i];
+    if(ghost) s+=`<rect x="${x}" y="${yBase-ghost[i]*scale}" width="${bw}" height="${ghost[i]*scale}" fill="none" stroke="${C.t3}" stroke-width="2" stroke-dasharray="8 6" opacity="${op}"/>`;
+    const col=offK[k]?C.off:(hl===k?C.gold:C.steel);
+    s+=`<rect x="${x}" y="${yBase-h}" width="${bw}" height="${h}" fill="${col}" opacity="${op}" rx="4"/>`;
+    if(labels&&!nolab[k]) s+=T(x+bw/2,yBase-h-16,(v<0.05?'0':v.toFixed(1)),{size:34,anchor:'middle',fill:hl===k?C.gold:C.t2,op,mono:true});
+  });
+  s+=`<line x1="${x0-bw}" y1="${yBase}" x2="${x0+2*gap+bw}" y2="${yBase}" stroke="${C.edge}" stroke-width="3" opacity="${op}"/>`;
+  return s;
+}
+
+/* ================= 第 2 期 ================= */
+/* 节拍锚点：每个节拍挂在"第 j 行旁白"开始后、到下一行之间的比例 a 处。
+   ANCH[i][j] = 第 i 节第 j 行旁白开始的节内秒数（中英各自从 cues 算出，逐行对应）。 */
+let CUR=0;
+const LN=j=>{const A=ANCH[CUR]||[];return j<A.length?A[j]:SEC[CUR][1]-SEC[CUR][0];};
+const AT=(j,a=0)=>LN(j)+a*(LN(j+1)-LN(j));
+const ON=(lt,j,a=0,dur=0.5)=>ease(ramp(lt,AT(j,a),AT(j,a)+dur));
+const IN=(lt,j,a=0)=>lt>=AT(j,a);
+const OFF=(lt,j,a=0,dur=0.4)=>1-ease(ramp(lt,AT(j,a),AT(j,a)+dur));
+const pulse=(lt,t0,dur=1.4)=>lt<t0||lt>t0+dur?0:Math.sin(Math.PI*(lt-t0)/dur);
+
+function TS(x,y,parts,{size=40,anchor='start',w=700,mono=false}={}){
+  return `<text x="${x}" y="${y}" font-size="${size}" font-weight="${w}" text-anchor="${anchor}" ${mono?'class="mono"':''}>`+
+    parts.map(([str,fill,op=1])=>`<tspan fill="${fill}" opacity="${op}">${esc(str)}</tspan>`).join('')+`</text>`;
+}
+function wrapT(x,y,str,{size=34,fill=C.t1,w=500,anchor='start',op=1,n=40,lh=1.35}={}){ // 中文原样，西文按词折行
+  if(CJK(str)) return T(x,y,str,{size,fill,w,anchor,op});
+  return wrapLatin(str,n).map((l,k)=>T(x,y+k*size*lh,l,{size,fill,w,anchor,op})).join('');
+}
+function src(x,y,key,op=1,anchor='start'){ return T(x,y,STR.src[key],{size:28,fill:C.t3,op,anchor}); }
+/* 竖排分数：分子 / 分数线 / 分母，各自可单独点亮 */
+function frac(cx,y,num,den,{size=44,opN=1,opD=1,colN=C.t1,colD=C.t1,op=1}={}){
+  const w=Math.max(num.length,den.length)*size*0.62+30;
+  return T(cx,y-16,num,{size,anchor:'middle',mono:true,fill:colN,op:op*opN,w:700})+
+    `<line x1="${cx-w/2}" y1="${y}" x2="${cx+w/2}" y2="${y}" stroke="${C.t2}" stroke-width="3" opacity="${op}"/>`+
+    T(cx,y+size+8,den,{size,anchor:'middle',mono:true,fill:colD,op:op*opD,w:700});
+}
+function xmark(x,y,o,sz=40){ return `<g opacity="${o}"><line x1="${x-sz}" y1="${y-sz}" x2="${x+sz}" y2="${y+sz}" stroke="${C.hand}" stroke-width="7" stroke-linecap="round"/><line x1="${x+sz}" y1="${y-sz}" x2="${x-sz}" y2="${y+sz}" stroke="${C.hand}" stroke-width="7" stroke-linecap="round"/></g>`; }
+function dashLine(x1,x2,y,col,op=1,lab=null){ let s=`<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="${col}" stroke-width="3" stroke-dasharray="12 9" opacity="${op}"/>`; if(lab) s+=T(x2+14,y+11,lab,{size:30,fill:col,op,mono:true,w:700}); return s; }
+function legend(x,y,op=1){
+  return arrow(x,y,x+70,y,C.push,op)+T(x+90,y+10,STR.legend_push,{size:28,op})+
+    tbar(x,y+50,x+70,y+50,C.press,op)+T(x+90,y+60,STR.legend_press,{size:28,op});
+}
+/* 光点沿直线流动：rate 越大越密 */
+function flow(x1,y1,x2,y2,rate,lt,col,op=1){
+  if(rate<=0.02||op<=0) return '';
+  const L=Math.hypot(x2-x1,y2-y1), gap=56/rate, off=(lt*90)%gap; let s='';
+  for(let d=off;d<L;d+=gap){const u=d/L; s+=`<circle cx="${x1+(x2-x1)*u}" cy="${y1+(y2-y1)*u}" r="7" fill="${col}" opacity="${op}"/>`;}
+  return s;
+}
+/* 左半边：三点三柱（第四、五节共用） */
+const LX=210,LY=330,LSP=260,LBY=820,LSC=110;
+function leftCell(lt,{vals=[1,1,1],off={},ghost=null,hl=null,hiPress=0,hiPush=0,op=1,labels=true,nolab={}}={}){
+  let s=net(LX,LY,LSP,{r:42,font:36,off,op});
+  if(hiPress>0) s+=`<g opacity="${hiPress*op}">`+`<path d="M${LX+2*LSP},${LY-50} C${LX+2*LSP},${LY-150} ${LX},${LY-150} ${LX},${LY-66}" fill="none" stroke="${C.gold}" stroke-width="11" stroke-opacity="0.6" stroke-linecap="round"/></g>`;
+  if(hiPush>0) s+=`<line x1="${LX+50}" y1="${LY}" x2="${LX+LSP-50}" y2="${LY}" stroke="${C.gold}" stroke-width="14" stroke-opacity="${0.6*hiPush*op}" stroke-linecap="round"/>`;
+  for(const k of Object.keys(off)) if(off[k]) s+=xmark(LX+'ABC'.indexOf(k)*LSP,LY,op,34);
+  s+=bars3(LX,LBY,vals,{scale:LSC,gap:LSP,bw:90,ghost,offK:off,hl,op,labels,nolab});
+  ['A','B','C'].forEach((k,i)=>s+=T(LX+i*LSP,LBY+40,k,{size:26,fill:C.t3,anchor:'middle',w:700,op}));
+  return s;
+}
+function card(op=1){ return R(880,230,960,690,{op,fill:'#131d25'}); }
+const topY=v=>LBY-v*LSC;   // 柱顶 y
+
+/* ---------- 一、上期的答案 ---------- */
+function sec1(t,lt,d){
+  let s=chrome(t,IN(lt,2)?STR.titles.s1b:STR.titles.s1);
+  const NX=560,NY=400,SP=400,BY=840;
+  const offC=IN(lt,0,0.62)?1:0;
+  s+=net(NX,NY,SP,{arAB:ramp(lt,AT(0,0.03),AT(0,0.12)),arBC:ramp(lt,AT(0,0.09),AT(0,0.18)),arCA:ramp(lt,AT(0,0.15),AT(0,0.27)),off:{C:offC}});
+  s+=T(96,250,STR.toy_tag,{size:26,fill:C.t3});
+  s+=legend(1500,250,ease(ramp(lt,AT(0,0.03),AT(0,0.12))));
+  s+=T(96,300,STR.bar_meaning,{size:26,fill:C.steel,op:ON(lt,0,0.3)});
+  let vals=NUM.rest, ghost=null;
+  if(IN(lt,1)){vals=sim('koC',ramp(lt,AT(1,0.0),AT(1,0.9))*9); ghost=[1,1,1];}
+  const gapOn=IN(lt,1,0.55);
+  s+=bars3(NX,BY,vals,{scale:120,gap:SP,bw:110,ghost,offK:{C:offC},nolab:gapOn?{B:1}:{}});
+  if(gapOn) s+=T(NX+SP-70,BY-vals[1]*120+12,vals[1].toFixed(1),{size:34,anchor:'end',fill:C.gold,mono:true,w:700});
+  if(offC){const o=ON(lt,0,0.62); s+=xmark(NX+2*SP,NY,o); s+=T(NX+2*SP,NY+100,STR.ko+' C',{size:30,fill:C.hand,anchor:'middle',op:o});}
+  if(IN(lt,1,0.55)){ // 上限 2 的虚线 + 空隙
+    const o=ON(lt,1,0.55), x=NX+SP, y2=BY-2*120, y16=BY-vals[1]*120;
+    s+=dashLine(x-90,x+90,y2,C.t2,o,'2');
+    s+=T(x+130,y2+46,STR.cap_note,{size:26,fill:C.t2,op:o});
+    const g=0.18+0.6*pulse(lt,AT(2,0),1.6);
+    s+=`<rect x="${x-55}" y="${y2}" width="110" height="${Math.max(0,y16-y2)}" fill="${C.gold}" opacity="${o*g}"/>`;
+  }
+  if(IN(lt,2,0.55)) s+=T(1500,600,STR.only_arith,{size:34,fill:C.gold,anchor:'middle',op:ON(lt,2,0.55),w:700});
+  return s;
+}
+/* ---------- 二、今天讲机器的哪一块 ---------- */
+function sec2(t,lt,d){
+  let s=chrome(t,STR.titles.s2);
+  s+=machine(960,560,{p:1,labels:false});
+  const pos=[[560,380],[560,740],[1360,380],[1360,740]];
+  STR.map.forEach((m,i)=>{
+    let o=ON(lt,0,0.30+i*0.15), focus=IN(lt,1);
+    const st=focus&&i==2?C.gold:C.edge, fill=focus&&i==2?C.gold:C.t1;
+    if(focus&&i!=2) o*=1-0.65*ON(lt,1,0);
+    s+=R(pos[i][0]-190,pos[i][1]-45,380,90,{op:o,r:45,stroke:st,sw:focus&&i==2?4:2});
+    s+=T(pos[i][0],pos[i][1]+12,m,{size:CJK(m)?32:28,anchor:'middle',op:o,fill});
+  });
+  if(IN(lt,1)) s+=T(960,920,STR.today,{size:34,fill:C.gold,anchor:'middle',op:ON(lt,1,0.3)});
+  return s;
+}
+/* ---------- 三、柱子为什么会停下来 ---------- */
+function tub(lt,v,pin,pout,{op=1,x=520,base=800,sc=140,bw=140,labels=false,inlet=true}={}){
+  let s='';
+  // 进水口（左上）与出水口（右下）
+  if(inlet) s+=`<path d="M${x-260},${base-400} L${x},${base-400} L${x},${base-370}" fill="none" stroke="${C.edge}" stroke-width="16" stroke-linejoin="round" opacity="${op}"/>`;
+  s+=`<path d="M${x+bw/2},${base-14} L${x+bw/2+230},${base-14}" fill="none" stroke="${C.edge}" stroke-width="16" opacity="${op}"/>`;
+  if(inlet) s+=flow(x-250,base-400,x-8,base-400,pin,lt,C.steel,op);
+  s+=flow(x+bw/2+6,base-14,x+bw/2+226,base-14,pout,lt,C.t3,op);
+  if(inlet) s+=`<path d="M${x-bw/2-26},${base-320} L${x-bw/2-26},${base+4} L${x+bw/2+26},${base+4} L${x+bw/2+26},${base-320}" fill="none" stroke="${C.t3}" stroke-width="5" stroke-linejoin="round" opacity="${op}"/>`;
+  const h=v*sc;
+  s+=`<rect x="${x-bw/2}" y="${base-h}" width="${bw}" height="${h}" fill="${C.steel}" rx="4" opacity="${op}"/>`;
+  s+=`<line x1="${x-bw/2-40}" y1="${base}" x2="${x+bw/2+40}" y2="${base}" stroke="${C.edge}" stroke-width="3" opacity="${op}"/>`;
+  s+=T(x,base-h-16,v<0.05?'0':v.toFixed(1),{size:34,anchor:'middle',fill:C.t2,mono:true,op});
+  s+=T(x,base+40,'A',{size:26,fill:C.t3,anchor:'middle',w:700,op});
+  if(labels){s+=T(x-130,base-420,STR.make+'  '+pin.toFixed(1),{size:30,fill:C.steel,anchor:'middle',op,w:700}); s+=T(x+bw/2+130,base+40,STR.decay+'  '+pout.toFixed(1),{size:30,fill:C.t3,anchor:'middle',op,w:700});}
+  return s;
+}
+function gauge(cx,cy,r,frac01,{op=1,ticks=[],label=''}={}){
+  let s=`<g opacity="${op}"><path d="M${cx-r},${cy} A${r},${r} 0 0 1 ${cx+r},${cy}" fill="none" stroke="${C.edge}" stroke-width="10"/>`;
+  ticks.forEach(([f,lab])=>{const a=Math.PI*(1-f),x=cx+Math.cos(a)*r,y=cy-Math.sin(a)*r;
+    s+=`<line x1="${x}" y1="${y}" x2="${cx+Math.cos(a)*(r-26)}" y2="${cy-Math.sin(a)*(r-26)}" stroke="${C.t3}" stroke-width="4"/>`;
+    s+=T(cx+Math.cos(a)*(r+34),cy-Math.sin(a)*(r+34)+10,lab,{size:26,fill:C.t3,anchor:'middle',mono:true});});
+  const a=Math.PI*(1-clamp(frac01));
+  s+=`<line x1="${cx}" y1="${cy}" x2="${cx+Math.cos(a)*(r-40)}" y2="${cy-Math.sin(a)*(r-40)}" stroke="${C.gold}" stroke-width="7" stroke-linecap="round"/><circle cx="${cx}" cy="${cy}" r="12" fill="${C.gold}"/>`;
+  s+=T(cx,cy+60,label,{size:30,anchor:'middle',fill:C.t2,w:700})+`</g>`;
+  return s;
+}
+function sec3(t,lt,d){
+  let s=chrome(t,STR.titles.s3);
+  let v=1,pin=1,pout=1;
+  if(IN(lt,4,0.12)&&!IN(lt,5)){v=sim('fill',ramp(lt,AT(4,0.12),AT(4,0.97))*6)[0];pin=2;pout=v;}
+  else if(IN(lt,5)&&!IN(lt,6)){
+    if(IN(lt,5,0.5)){v=sim('drain',ramp(lt,AT(5,0.5),AT(5,0.98))*3)[0];pin=0;pout=v;} else {v=2;pin=2;pout=2;}
+  } else if(IN(lt,6)){v=2;pin=2;pout=2;}
+  const flowOn=IN(lt,1)?ON(lt,1,0):0;
+  s+=tub(lt,v,pin*(IN(lt,1)?1:0),pout*(IN(lt,1)?1:0),{labels:IN(lt,1),op:ON(lt,0,0)});
+  // 3.3 两根对比
+  if(IN(lt,2)&&!IN(lt,4)){const o=ON(lt,2,0.3)*OFF(lt,4,0);
+    [[1,1200],[2,1560]].forEach(([h,x])=>{s+=tub(lt,h,0,h,{x,base:800,sc:110,bw:100,op:o,inlet:false});});
+    s+=T(1380,880,STR.twice,{size:30,fill:C.t2,anchor:'middle',op:o});}
+  if(IN(lt,3)&&!IN(lt,4)){const o=ON(lt,3,0)*OFF(lt,4,0);
+    s+=T(1380,330,STR.decay_rule,{size:40,anchor:'middle',w:900,op:o}); s+=src(1380,380,'set',o,'middle');
+    s+=T(1380,440,STR.unit_note,{size:26,fill:C.t3,anchor:'middle',op:ON(lt,3,0.6)});}
+  if(IN(lt,4)&&!IN(lt,5)){STR.rules3.forEach((r,k)=>s+=T(1000,400+k*80,r,{size:40,w:700,op:ON(lt,4,0.04+k*0.11)}));}
+  if(IN(lt,5)&&!IN(lt,6)){const o=ON(lt,5,0);
+    if(!IN(lt,5,0.5)) s+=gauge(1380,600,200,60/120,{op:o,ticks:[[0,'0'],[0.5,'60'],[1,'120']],label:STR.speedo});
+    else s+=gauge(1380,600,200,v/2,{op:ON(lt,5,0.5),ticks:[[0,'0'],[0.5,'1'],[1,'2']],label:STR.decay_now});}
+  if(IN(lt,6)&&!IN(lt,8)){const o=ON(lt,6,0);
+    s+=T(1380,420,STR.stop_h,{size:52,w:900,anchor:'middle',op:o});
+    s+=T(1380,500,'=',{size:52,w:900,anchor:'middle',op:o,fill:C.t3});
+    const g=IN(lt,7)?ON(lt,7,0):0;
+    s+=T(1380,590,STR.prod_speed,{size:52,w:900,anchor:'middle',op:o,fill:g>0.5?C.gold:C.t1});
+    if(g>0){const bw=CJK(STR.prod_speed)?420:STR.prod_speed.length*29+60; s+=R(1380-bw/2,530,bw,90,{fill:'none',stroke:C.gold,sw:4,op:g});}}
+  if(IN(lt,8)){const o=ON(lt,8,0.35);
+    s+=R(1000,330,760,380,{op:o});
+    const n=7+Math.round(2.6*Math.sin(lt*2.3)+1.4*Math.sin(lt*5.1));
+    for(let k=0;k<n;k++){const x=1200+(k%5)*90,y=440+Math.floor(k/5)*90;s+=`<circle cx="${x}" cy="${y}" r="22" fill="${C.steel}" opacity="${o}"/>`;}
+    s+=wrapT(1380,650,STR.discrete,{size:26,fill:C.t2,anchor:'middle',op:o,n:52});}
+  return s;
+}
+/* ---------- 四、"压住"的算式 ---------- */
+function sec4(t,lt,d){
+  let s=chrome(t,STR.titles.s4);
+  let vals=NUM.rest, off={}, ghost=null;
+  if(IN(lt,8)){off={C:1};vals=sim('koC',ramp(lt,AT(8,0.0),AT(8,0.55))*9);ghost=[1,1,1];}
+  s+=leftCell(lt,{vals,off,ghost,hiPress:ON(lt,0,0.4),hl:IN(lt,7,0.4)?'A':null});
+  s+=card();
+  // 第一行：A 的生产速度 = 2 × 压住系数
+  const flash2=pulse(lt,AT(2,0.02)), flashF=pulse(lt,AT(2,0.45));
+  s+=TS(920,320,[[STR.prodA,C.t1,ON(lt,1,0.1)],[' = ',C.t3,ON(lt,1,0.3)],['2',flash2>0.3?C.gold:C.t1,ON(lt,1,0.45)],[' × ',C.t3,ON(lt,1,0.55)],[STR.rep_f,flashF>0.3?C.gold:C.press,ON(lt,1,0.65)]],{size:CJK(STR.prodA)?44:38});
+  if(IN(lt,2)) s+=src(1000+STR.prodA.length*(CJK(STR.prodA)?44:24),360,'set',ON(lt,2,0.05));
+  if(IN(lt,2,0.45)) s+=T(920,400,STR.rep_range,{size:28,fill:C.t3,op:ON(lt,2,0.45)});
+  // 第二行：压住系数 = 1 ÷ (1 + C × C)
+  if(IN(lt,3)){const o=ON(lt,3,0);
+    s+=T(1290,505,STR.rep_f+' =',{size:44,anchor:'end',fill:C.press,op:o,w:700});
+    const hn=IN(lt,3,0.35)&&!IN(lt,4), hd=IN(lt,3,0.6)&&!IN(lt,4);
+    s+=frac(1500,490,'1','1 + C × C',{opN:ON(lt,3,0.3),opD:ON(lt,3,0.55),colN:hn?C.gold:C.t1,colD:hd?C.gold:C.t1,op:o});}
+  // 小表
+  const rows=[['C = 0','1',4,0.15],['C = 1','1/2',4,0.55],['C = 2',IN(lt,6)?'1/5':'?',5,0]];
+  rows.forEach(([l,r,j,a],k)=>{ if(!IN(lt,j,a)) return;
+    let col=C.t1; if((k==1&&IN(lt,7)&&!IN(lt,8))||(k==0&&IN(lt,8))) col=C.gold; if(k==2&&!IN(lt,6)) col=C.gold;
+    s+=TS(960,660+k*68,[[l+'  →  ',C.t2],[r,col]],{size:40,mono:true});});
+  if(IN(lt,6)) s+=T(1210,796,'= 1 ÷ (1 + 4)',{size:30,fill:C.t3,mono:true,op:ON(lt,6,0)});
+  // 4.8–4.9：一半的马力
+  if(IN(lt,7)&&!IN(lt,8)){const o=ON(lt,7,0.0);
+    s+=T(LX,topY(1)-110,STR.half_tag,{size:26,fill:C.gold,anchor:'middle',op:o});
+    s+=T(LX,topY(1)-70,'2 × 1/2 = 1',{size:30,fill:C.gold,anchor:'middle',mono:true,op:ON(lt,7,0.45)});
+    s+=src(LX,topY(1)+30-120+190,'calc',ON(lt,7,0.45),'middle');}
+  if(IN(lt,8)){const o=ON(lt,8,0.3);
+    s+=T(LX,topY(2)-90,'2 × 1 = 2',{size:30,fill:C.gold,anchor:'middle',mono:true,op:o});
+    if(IN(lt,8,0.72)){const q=ON(lt,8,0.72); // 第 1 期关掉 B 的终态
+      s+=R(1480,610,330,280,{op:q}); s+=T(1645,650,STR.koB_was,{size:24,fill:C.t3,anchor:'middle',op:q});
+      s+=`<g opacity="${q}">`+bars3(1555,850,NUM.koB,{scale:70,gap:90,bw:50,offK:{B:1},labels:true})+`</g>`;}}
+  return s;
+}
+/* ---------- 五、"推动"的算式 ---------- */
+function curveBox(x,y,w,h,key,{op=1,draw=1,xlab='',title='',hlSeg=0,pt=null,col=C.push,touch=false}={}){
+  let s=R(x,y,w,h,{op,fill:'#131d25'}); const px=v=>x+60+v/4*(w-100), py=v=>y+h-70-v*(h-150);
+  s+=`<line x1="${px(0)}" y1="${py(0)}" x2="${px(4)}" y2="${py(0)}" stroke="${C.edge}" stroke-width="3" opacity="${op}"/><line x1="${px(0)}" y1="${py(0)}" x2="${px(0)}" y2="${py(1.08)}" stroke="${C.edge}" stroke-width="3" opacity="${op}"/>`;
+  s+=dashLine(px(0),px(4),py(1),C.t3,op,null)+T(px(0)-14,py(1)+10,'1',{size:26,fill:C.t3,anchor:'end',mono:true,op});
+  [0,1,2,3,4].forEach(v=>s+=T(px(v),py(0)+34,String(v),{size:22,fill:C.t3,anchor:'middle',mono:true,op}));
+  s+=T(px(2),py(0)+64,xlab,{size:24,fill:C.t3,anchor:'middle',op});
+  s+=T(x+30,y+48,title,{size:28,w:700,fill:col,op});
+  const n=Math.max(2,Math.round(CURVE.x.length*clamp(draw)));
+  const d=CURVE.x.slice(0,n).map((v,k)=>(k?'L':'M')+px(v)+','+py(CURVE[key][k])).join(' ');
+  s+=`<path d="${d}" fill="none" stroke="${col}" stroke-width="5" stroke-linecap="round" opacity="${op}"/>`;
+  if(hlSeg>0){const seg=CURVE.x.map((v,k)=>[v,CURVE[key][k]]).filter(([v])=>v>=0.4&&v<=2.0);
+    s+=`<path d="${seg.map(([v,c],k)=>(k?'L':'M')+px(v)+','+py(c)).join(' ')}" fill="none" stroke="${C.gold}" stroke-width="10" stroke-linecap="round" opacity="${op*hlSeg}"/>`;}
+  if(touch) s+=`<circle cx="${px(0)}" cy="${py(1)}" r="11" fill="${C.gold}" opacity="${op}"/>`;
+  if(pt){s+=`<circle cx="${px(pt[0])}" cy="${py(pt[1])}" r="10" fill="${C.gold}" opacity="${pt[2]}"/>`+T(px(pt[0])+18,py(pt[1])+36,pt[3],{size:26,fill:C.gold,mono:true,op:pt[2]});}
+  return s;
+}
+function beaker(cx,cy,op){
+  let s=`<g opacity="${op}"><path d="M${cx-90},${cy-130} L${cx-90},${cy+110} Q${cx-90},${cy+130} ${cx-70},${cy+130} L${cx+70},${cy+130} Q${cx+90},${cy+130} ${cx+90},${cy+110} L${cx+90},${cy-130}" fill="none" stroke="${C.t2}" stroke-width="5"/>`;
+  s+=`<rect x="${cx-86}" y="${cy-60}" width="172" height="186" fill="${C.steel}" opacity="0.18"/>`;
+  for(let k=0;k<14;k++){const x=cx-70+((k*37)%140),y=cy+118-((k*11)%14);s+=`<rect x="${x}" y="${y-8}" width="12" height="12" fill="${C.t1}" transform="rotate(${k*23},${x+6},${y-2})"/>`;}
+  return s+`</g>`;
+}
+function sec5(t,lt,d){
+  let s=chrome(t,IN(lt,7)?STR.titles.s5b:STR.titles.s5);
+  if(!IN(lt,7)){
+    const ko=IN(lt,3);
+    s+=leftCell(lt,{nolab:IN(lt,5)?{A:1,B:1}:{},vals:ko?NUM.koC:NUM.rest,off:ko?{C:1}:{},hiPush:ON(lt,0,0)*(IN(lt,3)?0:1),hl:IN(lt,3)&&!IN(lt,4)?'B':null});
+    s+=card();
+    s+=TS(920,320,[[STR.prodB,C.t1,ON(lt,0,0.1)],[' = ',C.t3,ON(lt,0,0.3)],['2',C.t1,ON(lt,0,0.45)],[' × ',C.t3,ON(lt,0,0.55)],[STR.act_f,C.push,ON(lt,0,0.65)]],{size:CJK(STR.prodA)?44:38});
+    if(IN(lt,1)){const o=ON(lt,1,0), fn=IN(lt,6)?pulse(lt,AT(6,0.08)):0, fd=IN(lt,6)?pulse(lt,AT(6,0.28)):0;
+      s+=T(1290,505,STR.act_f+' =',{size:44,anchor:'end',fill:C.push,op:o,w:700});
+      const hn=(IN(lt,1,0.35)&&!IN(lt,2))||fn>0.3, hd=(IN(lt,1,0.6)&&!IN(lt,2))||fd>0.3;
+      s+=frac(1500,490,'A × A','1 + A × A',{opN:ON(lt,1,0.3),opD:ON(lt,1,0.55),colN:hn?C.gold:C.t1,colD:hd?C.gold:C.t1,op:o});}
+    if(!IN(lt,5)){
+      [['A = 0','0',0.1],['A = 1','1/2',0.38],['A = 2','4/5 = 0.8',0.72]].forEach(([l,r,a],k)=>{ if(!IN(lt,2,a)) return;
+        s+=TS(960,660+k*68,[[l+'  →  ',C.t2],[r,k==2&&IN(lt,3)?C.gold:C.t1]],{size:40,mono:true});});
+    } else {
+      const R3=[['A = 3','B = '+NUM.Bfrom['3'].toFixed(1),0.02],['A = 4','B ≈ '+NUM.Bfrom['4'].toFixed(2),0.36],['A = 10','B ≈ '+NUM.Bfrom['10'].toFixed(2),0.6]];
+      R3.forEach(([l,r,a],k)=>{ if(!IN(lt,5,a)) return; s+=TS(960,660+k*68,[[l+'  →  ',C.hand],[r,C.t1]],{size:40,mono:true});});
+      if(IN(lt,5,0.86)) s+=T(1360,880,STR.never,{size:34,fill:C.gold,anchor:'middle',w:900,op:ON(lt,5,0.86)*(IN(lt,6,0.45)?OFF(lt,6,0.45):1)});
+    }
+    if(IN(lt,6,0.45)) s+=T(1360,930-60+0,STR.den_more,{size:30,fill:C.gold,anchor:'middle',op:ON(lt,6,0.45)*(IN(lt,5,0.86)?1:1)});
+    // B 柱顶算式
+    if(IN(lt,3)&&!IN(lt,4)){s+=T(LX+LSP,topY(1.6)-60,'2 × 0.8 = 1.6',{size:30,fill:C.gold,anchor:'middle',mono:true,op:ON(lt,3,0.25)}); s+=src(LX+LSP,topY(1.6)-100,'calc',ON(lt,3,0.25),'middle');}
+    // 假设：从外面加 A
+    if(IN(lt,4)){const o=ON(lt,4,0.35);
+      s+=T(LX-70,topY(2)-50,'+',{size:64,w:900,fill:C.hand,anchor:'middle',op:o});
+      s+=T(LX+LSP/2,LBY+80,STR.suppose,{size:30,fill:C.hand,anchor:'middle',op:o});
+      const q=ON(lt,4,0.78); s+=dashLine(LX+LSP-70,LX+LSP+70,topY(2),C.t2,q,'2');
+      if(!IN(lt,5)) s+=T(LX+LSP,topY(2)-40,'?',{size:64,w:900,fill:C.gold,anchor:'middle',op:q});
+      if(IN(lt,5)){ // 只代算式的假设柱：紫色虚线描边
+        const steps=[[0.02,NUM.Bfrom['3']],[0.36,NUM.Bfrom['4']],[0.6,NUM.Bfrom['10']]]; let hv=1.6,aLab='A = 2';
+        steps.forEach(([a,val],k)=>{if(IN(lt,5,a)){const p=ON(lt,5,a,0.6);hv=hv+(val-hv)*p;aLab='A = '+['3','4','10'][k];}});
+        s+=`<rect x="${LX+LSP-45}" y="${topY(hv)}" width="90" height="${(hv-1.6)*LSC}" fill="none" stroke="${C.hand}" stroke-width="3" stroke-dasharray="8 6"/>`;
+        s+=T(LX+LSP-56,topY(hv)+10,String(Math.round(hv*100)/100),{size:28,fill:C.hand,anchor:'end',mono:true});
+        s+=T(LX,topY(2)-16,aLab,{size:30,fill:C.hand,anchor:'middle',mono:true,w:700});}}
+    return s;
+  }
+  // 5.9 起：整屏
+  if(!IN(lt,8)){
+    s+=T(760,560,STR.saturation,{size:120,w:900,fill:C.gold,anchor:'middle',op:ON(lt,7,0.3)});
+    s+=T(760,650,STR.sat_sub,{size:30,fill:C.t2,anchor:'middle',op:ON(lt,7,0.0)});
+    s+=beaker(1400,560,ON(lt,7,0.5)); s+=T(1400,760,STR.beaker,{size:26,fill:C.t3,anchor:'middle',op:ON(lt,7,0.5)});
+    return s;
+  }
+  const lo=IN(lt,9)?OFF(lt,9,0.15):1;
+  s+=curveBox(120,250,800,600,'rep',{op:ON(lt,8,0.0)*lo,draw:ramp(lt,AT(8,0.03),AT(8,0.3)),xlab:STR.x_C,title:STR.rep_f,col:C.press,touch:IN(lt,8,0.36)});
+  const pt=IN(lt,8,0.75)?[2,NUM.act['2'],ON(lt,8,0.75),'A = 2 → 0.8']:null;
+  s+=curveBox(1000,250,800,600,'act',{op:ON(lt,8,0.0),draw:ramp(lt,AT(8,0.36),AT(8,0.6)),xlab:STR.x_A,title:STR.act_f,pt,hlSeg:IN(lt,9)?ON(lt,9,0.72):0});
+  if(IN(lt,9)){
+    s+=T(520,360,'A × A ?',{size:44,w:900,fill:C.gold,anchor:'middle',mono:true,op:ON(lt,9,0.15)});
+    const r1=ON(lt,9,0.22), r2=ON(lt,9,0.42);
+    s+=TS(200,520,[[STR.only_A+'   ',C.t2,r1],['0.5 → 1/3 ,  2 → 2/3',C.t1,r1]],{size:34});
+    s+=TS(200,610,[['A × A   ',C.gold,r2],['0.5 → 0.2 ,  2 → 0.8',C.t1,r2]],{size:34});
+    s+=wrapT(520,720,STR.steep,{size:28,fill:C.t3,anchor:'middle',op:ON(lt,9,0.72),n:40});
+  }
+  if(IN(lt,10)){s+=T(1400,910,STR.shape,{size:30,fill:C.t2,anchor:'middle',op:ON(lt,10,0.2)}); s+=src(1800,910,'set',ON(lt,10,0.0),'end');}
+  return s;
+}
+/* ---------- 六、三根柱子同时打平 ---------- */
+const RULES=[['A','2','1 ÷ (1 + C×C)',C.press],['B','2','A×A ÷ (1 + A×A)',C.push],['C','2','B×B ÷ (1 + B×B)',C.push]];
+function loopNet(lt,ox,oy,sp,{op=1,cut=0,dot=0,off={}}={}){
+  let s=net(ox,oy,sp,{r:44,font:38,op,off});
+  if(dot>0){ // 光点沿 A→B→C→（上方弧）→A 绕圈
+    const per=4, u=((lt%per)/per)*3; let x,y;
+    if(u<1){x=ox+u*sp;y=oy;} else if(u<2){x=ox+sp+(u-1)*sp;y=oy;}
+    else {const k=u-2,top=oy-150,cx=ox+2*sp,ax=ox,b=(p0,p1,p2,p3,t)=>(1-t)**3*p0+3*(1-t)**2*t*p1+3*(1-t)*t*t*p2+t**3*p3;
+      x=b(cx,cx,ax,ax,k);y=b(oy-54,top,top,oy-68,k);}
+    s+=`<circle cx="${x}" cy="${y}" r="13" fill="${C.gold}" opacity="${op*dot}"/>`;
+  }
+  if(cut>0){const cx=ox+2*sp-40, cy=oy-110;
+    s+=`<rect x="${cx-34}" y="${cy-40}" width="68" height="80" fill="${C.bg}" opacity="${op*cut}"/>`+xmark(cx,cy,op*cut,22);}
+  return s;
+}
+function sec6(t,lt,d){
+  let s=chrome(t,STR.titles.s6);
+  const mach=IN(lt,5)&&!IN(lt,7);
+  if(!mach){
+    const lp=IN(lt,7);
+    s+=loopNet(lt,170,520,270,{dot:IN(lt,1,0.1)&&!IN(lt,2)?1:(lp&&IN(lt,7,0.3)?1:0),cut:lp?ON(lt,7,0)*OFF(lt,7,0.3):0});
+    if(!lp){
+      s+=card();
+      RULES.forEach(([g,two,f,col],k)=>{const y=340+k*120, lit=k==2&&IN(lt,0,0.05)&&!IN(lt,1)?C.gold:C.t1;
+        s+=TS(920,y,[[g+' : ',lit],[two+' × ',C.t1],[f,col]],{size:36,mono:true});
+        if(IN(lt,3)){const a=[0.1,0.3,0.5][k], o=ON(lt,3,a);
+          s+=TS(920,y+52,[['= 2 × 1/2 = 1 ',C.t2,o],['✓',C.gold,o]],{size:32,mono:true});}});
+      if(IN(lt,3,0.5)) s+=src(920,760,'calc',ON(lt,3,0.5));
+      if(IN(lt,4)) s+=wrapT(920,820,STR.chosen,{size:28,fill:C.t2,op:ON(lt,4,0.25),n:60})+src(920,880,'set',ON(lt,4,0.25));
+    } else {
+      s+=T(1380,420,STR.next_ep,{size:34,fill:C.t2,anchor:'middle',op:ON(lt,7,0.62)});
+      s+=T(1380,500,STR.ep4,{size:34,fill:C.t2,anchor:'middle',op:ON(lt,7,0.86)});
+      s+=T(1380,300,STR.cut_note,{size:30,fill:C.hand,anchor:'middle',op:ON(lt,7,0)*OFF(lt,7,0.3)});
+    }
+    return s;
+  }
+  // 6.5–6.8：机器里三条规则
+  const bx=560,by=310,bw=800,bh=360;
+  s+=R(bx,by,bw,bh,{fill:'#1b2833',stroke:C.steel,sw:3,r:22});
+  s+=T(bx+bw/2,by+56,STR.machine,{size:36,w:900,anchor:'middle'});
+  const drug=IN(lt,6);
+  RULES.forEach(([g,two,f,col],k)=>{
+    const y=by+130+k*80; let tw=two, tc=C.t1;
+    if(k==2&&IN(lt,5,0.12)&&!drug){tw='0';tc=C.off;}
+    if(k==0&&drug&&IN(lt,6,0.3)){tw='1';tc=C.hand;}
+    const step=!drug&&IN(lt,5,[0.62,0.48,0.76][k]);
+    s+=TS(bx+60,y,[[g+' : ',step?C.gold:C.t1],[tw,tc],[' × ',C.t1],[f,col]],{size:32,mono:true});
+  });
+  // 入口
+  s+=bars3(170,560,[1,1,1],{scale:40,gap:50,bw:32,labels:false});
+  s+=arrow(330,440,bx-14,440,C.steel); s+=arrow(330,560,bx-14,560,C.hand);
+  s+=T(250,640,drug?STR.drug:(STR.ko+' C'),{size:30,fill:C.hand,anchor:'middle',w:700});
+  s+=arrow(bx+bw+14,490,bx+bw+150,490,C.steel);
+  if(!drug){ // 出口：C → A → B 依次出现
+    const v=[IN(lt,5,0.62)?NUM.koC[0]:null,IN(lt,5,0.76)?NUM.koC[1]:null,IN(lt,5,0.48)?NUM.koC[2]:null];
+    v.forEach((x,k)=>{ if(x===null) return; const X=bx+bw+200+k*70;
+      s+=`<rect x="${X-22}" y="${560-x*60}" width="44" height="${x*60}" fill="${k==2?C.off:C.steel}" rx="3"/>`;
+      s+=T(X,560-x*60-12,x<0.05?'0':x.toFixed(1),{size:26,anchor:'middle',mono:true,fill:C.t2});
+      s+=T(X,596,'ABC'[k],{size:22,anchor:'middle',fill:C.t3,w:700});});
+  } else {
+    s+=T(bx+bw+230,500,'?',{size:70,w:900,fill:C.gold,anchor:'middle',op:ON(lt,6,0.35)});
+    s+=wrapT(960,780,STR.pert_rule,{size:34,fill:C.gold,anchor:'middle',w:700,op:ON(lt,6,0.55),n:56});
+    s+=T(960,850,STR.no_result,{size:24,fill:C.t3,anchor:'middle',op:ON(lt,6,0.55)});
+  }
+  return s;
+}
+/* ---------- 七、真实细胞里，和总结 ---------- */
+function sigmoid(x,leak){ return leak+(1-leak)*Math.pow(x,4)/(Math.pow(0.45,4)+Math.pow(x,4)); }
+function sec7(t,lt,d){
+  let s=chrome(t,IN(lt,5)?STR.titles.s7c:IN(lt,3)?STR.titles.s7b:STR.titles.s7);
+  if(!IN(lt,3)){
+    if(!IN(lt,2)){
+      s+=T(96,250,STR.real_tag,{size:28,fill:C.gold,w:700});
+      // 细菌 + 绿灯
+      const o=ON(lt,0,0), glow=ramp(lt,AT(0,0.15),AT(0,0.4));
+      s+=`<rect x="170" y="400" width="600" height="260" rx="130" fill="#14202a" stroke="${C.steel}" stroke-width="4" opacity="${o}"/>`;
+      s+=`<rect x="280" y="515" width="170" height="30" rx="6" fill="${C.edge}" opacity="${o}"/>`;
+      s+=T(365,500,STR.ctrl_dna,{size:22,fill:C.t3,anchor:'middle',op:o});
+      s+=`<line x1="450" y1="530" x2="520" y2="530" stroke="${C.t3}" stroke-width="4" opacity="${o}"/>`;
+      s+=`<circle cx="590" cy="530" r="${46+14*glow}" fill="${C.t1}" opacity="${o*(0.1+0.7*glow)}"/><circle cx="590" cy="530" r="46" fill="none" stroke="${C.t2}" stroke-width="4" opacity="${o}"/>`;
+      s+=T(470,720,STR.lac_src,{size:24,fill:C.t3,anchor:'middle',op:o});
+      // 示意曲线
+      const co=ON(lt,0,0.45), leak=IN(lt,1,0.35)?0.08*ON(lt,1,0.35):0;
+      s+=R(900,290,900,560,{op:co,fill:'#131d25'});
+      const px=x=>960+x*780, py=y=>790-y*420;
+      s+=`<line x1="${px(0)}" y1="${py(0)}" x2="${px(1)}" y2="${py(0)}" stroke="${C.edge}" stroke-width="3" opacity="${co}"/><line x1="${px(0)}" y1="${py(0)}" x2="${px(0)}" y2="${py(1.1)}" stroke="${C.edge}" stroke-width="3" opacity="${co}"/>`;
+      s+=T(px(0.5),py(0)+44,STR.x_inducer,{size:24,fill:C.t3,anchor:'middle',op:co});
+      s+=T(px(0)+14,py(1.08),STR.y_rate,{size:24,fill:C.t3,op:co});
+      s+=T(1780,330,STR.schematic,{size:22,fill:C.t3,anchor:'end',op:co});
+      const n=Math.round(100*clamp(ramp(lt,AT(0,0.5),AT(0,0.82))));
+      let dd=''; for(let k=0;k<=n;k++){const x=k/100; dd+=(k?'L':'M')+px(x)+','+py(sigmoid(x,leak));}
+      if(n>1) s+=`<path d="${dd}" fill="none" stroke="${C.steel}" stroke-width="5" opacity="${co}"/>`;
+      s+=T(px(0.62),py(0.55),STR.measured_curve,{size:24,fill:C.steel,op:co*clamp(n/60)});
+      if(IN(lt,0,0.88)){const q=ON(lt,0,0.88); // 我们的推动算式，同形状对照（不标刻度）
+        const d2=CURVE.x.map((v,k)=>(k?'L':'M')+px(v/4)+','+py(CURVE.act[k])).join(' ');
+        s+=`<path d="${d2}" fill="none" stroke="${C.push}" stroke-width="4" stroke-dasharray="10 8" opacity="${q}"/>`;
+        s+=T(px(0.98),py(0.9)+50,STR.our_formula,{size:24,fill:C.push,anchor:'end',op:q});}
+      if(IN(lt,1,0.35)) s+=T(px(0.03),py(leak)-24,STR.leak,{size:24,fill:C.gold,op:ON(lt,1,0.35)});
+      if(IN(lt,1,0.7)) s+=wrapT(470,800,STR.ep1_clean,{size:24,fill:C.t3,anchor:'middle',op:ON(lt,1,0.7),n:44});
+      return s;
+    }
+    // 7.6：大多是虚线的网
+    const o=ON(lt,2,0); const pts=[];
+    for(let k=0;k<16;k++) pts.push([300+((k*263)%1320),320+((k*149)%520)]);
+    for(let k=0;k<26;k++){const a=pts[(k*5)%16],b=pts[(k*7+3)%16]; if(a===b) continue;
+      s+=`<line x1="${a[0]}" y1="${a[1]}" x2="${b[0]}" y2="${b[1]}" stroke="${k%6==0?C.steel:C.t3}" stroke-width="3" ${k%6==0?'':'stroke-dasharray="10 9"'} opacity="${o*(k%6==0?0.9:0.55)}"/>`;}
+    pts.forEach(([x,y])=>s+=`<circle cx="${x}" cy="${y}" r="16" fill="#1b2833" stroke="${C.steel}" stroke-width="3" opacity="${o}"/>`);
+    s+=T(960,900,STR.net_legend,{size:30,fill:C.gold,anchor:'middle',w:700,op:ON(lt,2,0.3)});
+    s+=wrapT(960,270,STR.params_list,{size:28,fill:C.t2,anchor:'middle',op:ON(lt,2,0.15),n:70});
+    return s;
+  }
+  if(!IN(lt,5)){
+    const o=ON(lt,3,0.3);
+    if(CJK(STR.takeaway)){const [a,b]=STR.takeaway.split('；'); s+=T(960,500,a+'；',{size:50,w:900,anchor:'middle',op:o}); s+=T(960,590,b,{size:50,w:900,anchor:'middle',op:o,fill:C.gold});}
+    else wrapLatin(STR.takeaway,40).forEach((l,k,A)=>s+=T(960,540+(k-(A.length-1)/2)*68,l,{size:52,w:900,anchor:'middle',op:o}));
+    return s;
+  }
+  const o=ON(lt,5,0);
+  s+=net(560,430,400,{op:o});
+  s+=bars3(560,800,[0,0,0],{scale:120,gap:400,bw:110,op:o});
+  s+=T(96,250,STR.boot,{size:28,fill:C.t2,op:o});
+  const q=ON(lt,5,0.55); [0,1,2].forEach(k=>s+=T(560+k*400,690,'?',{size:80,w:900,fill:C.gold,anchor:'middle',op:q}));
+  return s;
+}
+const DRAW=[sec1,sec2,sec3,sec4,sec5,sec6,sec7];
+
+/* 提示音事件：[节, 行, 比例, 类型]。render.py 读出时刻后合成到配音里 */
+const SOUND=[[1,1,0.0,'bar'],[1,2,0.0,'reveal'],[4,6,0.0,'reveal'],[4,8,0.0,'bar'],[5,3,0.0,'bar'],
+  [5,5,0.02,'bar'],[5,5,0.36,'bar'],[5,5,0.6,'bar'],[5,5,0.86,'reveal'],[6,3,0.1,'tick'],[6,3,0.3,'tick'],[6,3,0.5,'tick']];
+function soundEvents(){ return SOUND.map(([i,j,a,k])=>{CUR=i-1; return [SEC[i-1][0]+AT(j,a),k];}); }
+
+function renderFrame(t){
+  let i=0; for(let k=0;k<SEC.length;k++) if(t>=SEC[k][0]) i=k;
+  CUR=i; const [a,b]=SEC[i];
+  let s=`<rect width="1920" height="1080" fill="${C.bg}"/>`;
+  const lt=Math.min(t-a,b-a-1e-3);
+  s+=DRAW[i](t,lt,b-a);
+  s+=subtitle(t);
+  document.getElementById('svg').innerHTML=s;
+}
+/* ---------- 封面 ---------- */
+function renderCover(h=1080){
+  const W=1920, oy=(h-1080)/2;
+  const st=document.getElementById('stage'); st.style.height=h+'px';
+  const svg=document.getElementById('svg'); svg.setAttribute('height',h); svg.setAttribute('viewBox',`0 0 ${W} ${h}`);
+  let s=`<rect width="${W}" height="${h}" fill="${C.bg}"/><g transform="translate(0,${oy})">`;
+  const zh=CJK(STR.cover_t1);
+  s+=T(110,170,STR.cover_tag,{size:40,fill:C.eb,mono:true,ls:4});
+  s+=T(104,330,STR.cover_t1,{size:zh?120:88,w:900});
+  s+=T(104,480,STR.cover_t2a,{size:zh?84:68,w:900,fill:C.t2});
+  s+=T(104,600,STR.cover_t2b,{size:zh?84:68,w:900,fill:C.gold});
+  s+=T(110,740,STR.cover_sub,{size:zh?40:34,fill:C.t3});
+  // 右：B 停在 1.6，离上限 2 差一截（toycell 关掉 C 的稳态）
+  const x=1580, base=960, sc=210, v=NUM.koC[1];
+  s+=`<rect x="${x-110}" y="${base-v*sc}" width="220" height="${v*sc}" fill="${C.steel}" rx="6"/>`;
+  s+=`<rect x="${x-110}" y="${base-2*sc}" width="220" height="${(2-v)*sc}" fill="${C.gold}" opacity="0.22"/>`;
+  s+=`<line x1="${x-150}" y1="${base-2*sc}" x2="${x+150}" y2="${base-2*sc}" stroke="${C.t1}" stroke-width="6" stroke-dasharray="18 12"/>`;
+  s+=T(x+170,base-2*sc+22,'2',{size:72,w:900,mono:true});
+  s+=T(x-140,base-v*sc+34,'1.6',{size:96,w:900,mono:true,anchor:'end',fill:C.gold});
+  s+=T(x,base+70,'B',{size:48,w:900,anchor:'middle',fill:C.t3});
+  s+=`</g>`; svg.innerHTML=s;
+}
+window.fontsReady=document.fonts.ready;
+</script></body></html>
